@@ -1,64 +1,96 @@
-from flask import Flask, jsonify
-from dotenv import load_dotenv
-import mysql.connector, os
+from flask import Flask, jsonify, request
+from db import grab_all, grab_one, create_entry, engine
+from datetime import datetime
 
 # Database Set-Up
-
-load_dotenv()
-
-config = {
-    "host": "localhost",
-    "user": os.getenv("DB_USER"),
-    "password": os.getenv("DB_PASS"),
-    "database": "job_tracker"
-}
-
-try:
-    engine = mysql.connector.connect(**config)
-except Exception:
-    raise Exception("Failed to connect to database")
-
-# Boilerplate code
-
-def grab_all(table_name):
-    try:
-        cursor = engine.cursor(dictionary=True)
-        
-        cursor.execute(f"SELECT * FROM {table_name}")
-        
-        return cursor.fetchall()
-    except Exception as e:
-        if cursor:
-            cursor.close()
-        raise Exception(f'Failed to connect to database: {e}')
-    finally:
-        if cursor:
-            cursor.close()
-        
-def grab_one(table_name, id):
-    keys = {
-        "contacts": "contact_id",
-        "companies": "company_id",
-        "jobs": "job_id",
-        "applications": "application_id"
-    }
-    
-    try:
-        cursor = engine.cursor(dictionary=True)
-        query = f"SELECT * FROM {table_name} where {keys[table_name]} = %s"
-        cursor.execute(query, (id,))
-        value = cursor.fetchone()
-        cursor.close()
-        return value
-    except Exception as e:
-        if cursor:
-            cursor.close()
-            
-        raise Exception(f"Database error: {e}")
 
 app = Flask(__name__)
 
 # Create
+
+@app.route("/api/applications", methods=["POST"])
+def create_application():
+    body = request.get_json()
+        
+    raw = (body['job_id'] if body['job_id'] else None, 
+            body['application_date'] if body['application_date'] else None,
+            body['status'] if body['status'] else None,
+            body['resume_version'] if body['resume_version'] else None,
+            body['cover_letter_sent'] if body['cover_letter_sent'] else None,
+            body['response_date'] if body['response_date'] else None,
+            body['interview_date'] if body['interview_date'] else None,
+            body['notes'] if body['notes'] else None,
+            body['created_at'] if body['created_at'] else datetime.now())
+    
+    try:
+        create_entry("applications", raw)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    else:
+        return jsonify({"msg": "Entry saved"}), 200
+    
+@app.route("/api/contacts", methods=["POST"])
+def create_contact():
+    body = request.get_json()
+        
+    raw = ( body['company_id'] if body['company_id'] else None,
+            body['first_name'] if body['first_name'] else None,
+            body['last_name'] if body['last_name'] else None,
+            body['email'] if body['email'] else None,
+            body['phone'] if body['phone'] else None,
+            body['job_title'] if body['job_tile'] else None,
+            body['linkedin_url'] if body['linkedin_url'] else None,
+            body['notes'] if body['notes'] else None,
+            body['created_at'] if body['created_at'] else datetime.now())
+    
+    try:
+        create_entry("jobs", raw)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    else:
+        return jsonify({"msg": "Entry saved"}), 200
+
+@app.route("/api/jobs", methods=["POST"])
+def create_job():
+    body = request.get_json()
+    
+    raw = (body['company_id'] if body['company_id'] else None, 
+           body['job_title'] if body['job_title'] else None, 
+           body['job_description'] if body['job_description'] else None, 
+           body['salary_min'] if body['salary_min'] else None, 
+           body['salary_max'] if body['salary_max'] else None, 
+           body['job_type'] if body['job_type'] else None, 
+           body['posting_url'] if body['posting_url'] else None, 
+           body['date_posted'] if body['date_posted'] else None, 
+           body['is_active'] if body['is_active'] else None, 
+           body['notes'] if body['notes'] else None, 
+           body['created_at'] if body['created_at'] else datetime.now())
+    
+    try:
+        create_entry("jobs", raw)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    else:
+        return jsonify({"msg": "Entry saved"}), 200
+    
+
+@app.route("/api/companies", methods=["POST"])
+def create_company():
+    body = request.get_json()
+        
+    raw = (body['company_name'] if body['company_name'] else None, 
+            body['industry'] if body['industry'] else None,
+            body['website'] if body['website'] else None,
+            body['city'] if body['city'] else None,
+            body['notes'] if body['notes'] else None,
+            body['createdy_at'] if body['created_at'] else datetime.now())
+        
+    try:
+        create_entry("companies", raw)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    else:
+        return jsonify({"msg": "Entry saved"}), 200
 
 # Read
 
@@ -153,5 +185,6 @@ def get_one_contact(contact_id):
 
 if __name__ == '__main__':
     app.run()
+    
     
 engine.close()
