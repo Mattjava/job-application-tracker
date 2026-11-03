@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request
-from db import grab_all, grab_one, create_entry, engine
+from db import grab_all, grab_one, create_entry, delete_entry, engine
 from datetime import datetime
 
 # Database Set-Up
@@ -185,6 +185,54 @@ def get_one_contact(contact_id):
 # Update
 
 # Delete
+
+@app.route("/api/applications/<int:app_id>",  methods=["DELETE"])
+def delete_application(app_id):
+    try:
+        entity = delete_entry("applications", app_id)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    
+    if not entity:
+        return jsonify({"msg": "Not found"}), 400
+    
+    return jsonify(entity), 200
+
+@app.route("/api/jobs/<int:job_id>",  methods=["DELETE"])
+def delete_job(job_id):
+    try:
+        entity = delete_entry("jobs", job_id)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    
+    if not entity:
+        return jsonify({"msg": "Not found"}), 400
+    
+    return jsonify(entity), 200
+
+@app.route("/api/companies/<int:company_id>",  methods=["DELETE"])
+def delete_company(company_id):
+    try:
+        entity = delete_entry("companies", company_id)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    
+    if not entity:
+        return jsonify({"msg": "Not found"}), 400
+    
+    return jsonify(entity), 200
+
+@app.route("/api/contacts/<int:contact_id>", methods=["DELETE"])
+def delete_contact(contact_id):
+    try:
+        entity = delete_entry("contacts", contact_id)
+    except Exception as e:
+        return jsonify(str(e)), 500
+    
+    if not entity:
+        return jsonify({"msg": "Not found"}), 400
+    
+    return jsonify(entity), 200
 
 if __name__ == '__main__':
     app.run()

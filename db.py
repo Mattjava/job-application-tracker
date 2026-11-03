@@ -78,5 +78,23 @@ def create_entry(table_name: str, data: tuple):
     except Exception as e:
         cursor.close()
         raise Exception(f"Database error: {e}")
-        
-        
+
+def delete_entry(table_name: str, id: int):
+    keys = {
+        "contacts": "contact_id",
+        "companies": "company_id",
+        "jobs": "job_id",
+        "applications": "application_id"
+    }
+    
+    try:
+        cursor = engine.cursor(dictionary=True)
+        query = f"DELETE * FROM {table_name} where {keys[table_name]} = %s"
+        cursor.execute(query, (id,))
+        cursor.close()
+        return "Successfully deleted"
+    except Exception as e:
+        if cursor:
+            cursor.close()
+            
+        raise Exception(f"Database error: {e}")
