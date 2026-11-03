@@ -10,7 +10,7 @@ config = {
     "database": "job_tracker"
 }
 
-TABLE_NAME = ["companies", "jobs", "contacts", "companies"]
+TABLE_NAME = ["companies", "jobs", "contacts", "applications"]
 
 try:
     engine = mysql.connector.connect(**config)
@@ -55,10 +55,10 @@ def grab_one(table_name, id):
 
 def create_entry(table_name: str, data: tuple):
     queries = {
-        "application": "INSERT INTO applications(job_id, application_date, status, resume_version, cover_letter_sent, response_date, interview_date, notes, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        "jobs": "INSERT INTO jobs(company_id, job_title, job_description, salary_min, salary_max, job_type, posting_url, date_posted, is_active, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s )",
-        "contacts": "INSERT INTO contacts(company_id, first_name, last_name, email, phone, job_title, linkedin_url, notes, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        "companies": "INSERT INTO companies(company_name, industry, website, city, state, notes, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s)"
+        "applications": "INSERT INTO applications(job_id, application_date, status, resume_version, cover_letter_sent, response_date, interview_date, notes, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);",
+        "jobs": "INSERT INTO jobs(company_id, job_title, job_description, salary_min, salary_max, job_type, posting_url, date_posted, is_active, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+        "contacts": "INSERT INTO contacts(company_id, first_name, last_name, email, phone, job_title, linkedin_url, notes, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);",
+        "companies": "INSERT INTO companies(company_name, industry, website, city, state, notes, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     }
     
     if table_name not in queries:
@@ -68,14 +68,15 @@ def create_entry(table_name: str, data: tuple):
         cursor = engine.cursor()
         query = queries[table_name]
         
-        data = tuple(data)
-        
         cursor.execute(query, data)
         
         engine.commit()
         
+        cursor.close()
+        
         return True
     except Exception as e:
+        cursor.close()
         raise Exception(f"Database error: {e}")
         
         

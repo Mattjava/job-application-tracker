@@ -12,15 +12,15 @@ app = Flask(__name__)
 def create_application():
     body = request.get_json()
         
-    raw = (body['job_id'] if body['job_id'] else None, 
-            body['application_date'] if body['application_date'] else None,
-            body['status'] if body['status'] else None,
-            body['resume_version'] if body['resume_version'] else None,
-            body['cover_letter_sent'] if body['cover_letter_sent'] else None,
-            body['response_date'] if body['response_date'] else None,
-            body['interview_date'] if body['interview_date'] else None,
-            body['notes'] if body['notes'] else None,
-            body['created_at'] if body['created_at'] else datetime.now())
+    raw = (body['job_id'] if 'job_id' in body else None, 
+            body['application_date'] if 'application_date' in body else datetime.now().isoformat(),
+            body['status'] if 'status' in body else None,
+            body['resume_version'] if 'resume_version' in body else None,
+            body['cover_letter_sent'] if 'cover_letter_sent' in body else 0,
+            body['response_date'] if 'response_date' in body else None,
+            body['interview_date'] if 'interview_date' in body else None,
+            body['notes'] if 'notes' in body else None,
+            body['created_at'] if 'created_at' in body else datetime.now().isoformat())
     
     try:
         create_entry("applications", raw)
@@ -33,18 +33,18 @@ def create_application():
 def create_contact():
     body = request.get_json()
         
-    raw = ( body['company_id'] if body['company_id'] else None,
-            body['first_name'] if body['first_name'] else None,
-            body['last_name'] if body['last_name'] else None,
-            body['email'] if body['email'] else None,
-            body['phone'] if body['phone'] else None,
-            body['job_title'] if body['job_tile'] else None,
-            body['linkedin_url'] if body['linkedin_url'] else None,
-            body['notes'] if body['notes'] else None,
-            body['created_at'] if body['created_at'] else datetime.now())
+    raw = ( body['company_id'] if 'company_id' in body else None,
+            body['first_name'] if 'first_name' in body else None,
+            body['last_name'] if 'last_name' in body else None,
+            body['email'] if 'email' in body else None,
+            body['phone'] if 'phone' in body else None,
+            body['job_title'] if 'job_title' in body else None,
+            body['linkedin_url'] if 'linkedin_url' in body else None,
+            body['notes'] if 'notes' in body else None,
+            body['created_at'] if 'created_at' in body else datetime.now())
     
     try:
-        create_entry("jobs", raw)
+        create_entry("contacts", raw)
     except Exception as e:
         return jsonify(str(e)), 500
     else:
@@ -54,17 +54,19 @@ def create_contact():
 def create_job():
     body = request.get_json()
     
-    raw = (body['company_id'] if body['company_id'] else None, 
-           body['job_title'] if body['job_title'] else None, 
-           body['job_description'] if body['job_description'] else None, 
-           body['salary_min'] if body['salary_min'] else None, 
-           body['salary_max'] if body['salary_max'] else None, 
-           body['job_type'] if body['job_type'] else None, 
-           body['posting_url'] if body['posting_url'] else None, 
-           body['date_posted'] if body['date_posted'] else None, 
-           body['is_active'] if body['is_active'] else None, 
-           body['notes'] if body['notes'] else None, 
-           body['created_at'] if body['created_at'] else datetime.now())
+    
+    raw = (body['company_id'] if 'company_id' in body else None, 
+           body['job_title'] if 'job_title' in body else None, 
+           body['job_description'] if 'job_description' in body else None, 
+           body['salary_min'] if 'salary_min' in body else None, 
+           body['salary_max'] if 'salary_max' in body else None, 
+           body['job_type'] if 'job_type' in body else None, 
+           body['posting_url'] if 'posting_url' in body else None, 
+           body['date_posted'] if 'date_posted' in body else None, 
+           body['is_active'] if 'is_active' in body else 0, 
+           body['created_at'] if 'created_at' in body else datetime.now())
+    
+    print(raw)
     
     try:
         create_entry("jobs", raw)
@@ -78,12 +80,13 @@ def create_job():
 def create_company():
     body = request.get_json()
         
-    raw = (body['company_name'] if body['company_name'] else None, 
-            body['industry'] if body['industry'] else None,
-            body['website'] if body['website'] else None,
-            body['city'] if body['city'] else None,
-            body['notes'] if body['notes'] else None,
-            body['createdy_at'] if body['created_at'] else datetime.now())
+    raw = (body['company_name'] if 'company_name' in body else None, 
+            body['industry'] if 'industry' in body else None,
+            body['website'] if 'website' in body else None,
+            body['city'] if 'city' in body else None,
+            body['state'] if 'state' in body else None,
+            body['notes'] if 'notes' in body else None,
+            body['created_at'] if 'created_at' in body else datetime.now().isoformat())
         
     try:
         create_entry("companies", raw)
@@ -185,6 +188,4 @@ def get_one_contact(contact_id):
 
 if __name__ == '__main__':
     app.run()
-    
-    
-engine.close()
+    engine.close()
