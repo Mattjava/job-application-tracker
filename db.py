@@ -78,6 +78,27 @@ def create_entry(table_name: str, data: tuple):
     except Exception as e:
         cursor.close()
         raise Exception(f"Database error: {e}")
+    
+def update_entry(table_name: str, data: tuple):    
+    queries = {
+        "contacts": "UPDATE contacts SET company_id = %s, first_name = %s, last_name = %s, email = %s, phone = %s, job_title = %s, linkedin_url = %s, notes = %s WHERE contact_id = %s",
+        "companies": "UPDATE companies SET company_name = %s, industry = %s, website = %s, city = %s, state = %s, notes = %s WHERE company_id = %s",
+        "jobs": "UPDATE jobs SET company_id = %s, job_title = %s, job_description = %s, salary_min = %s, salary_max = %s, job_type = %s, posting_url = %s, date_posted = %s, is_active = %s WHERE job_id = %s",
+        "applications": "UPDATE applications SET job_id = %s, application_date = %s, status = %s, resume_version = %s, cover_letter_sent = %s, response_date = %s, interview_date = %s, notes = %s WHERE application_id = %s"
+    }
+    
+    try:
+        cursor = engine.cursor()
+        
+        query = queries[table_name]
+        
+        cursor.execute(query, data)
+        engine.commit()
+        cursor.close()
+    except Exception as e:
+        cursor.close()
+        raise Exception(f"Database error: {e}")    
+    
 
 def delete_entry(table_name: str, id: int):
     keys = {
