@@ -1,8 +1,66 @@
-from flask import Flask
-from crud import engine
+from flask import Flask, jsonify
+from crud import *
+from datetime import datetime
+import json, math
 
 app = Flask(__name__)
 
+def evaluate_skills(skills):
+    print(f"Your skills: {skills}\n")
+    skills = [skill.lower() for skill in skills]
+    
+    jobs = show_all_jobs()
+    
+    report = []
+    
+    for job in jobs:
+        if 'requirements' not in job or job['requirements'] is None:
+            continue
+        req = json.loads(job['requirements'])
+        
+        company = get_one_company(job['company_id'])
+        
+        title = f"{job['job_title']} at {company['company_name']}"
+        
+        if len(req) == 0:
+            continue
+        
+        total = len(req)  
+        
+
+        matches = 0
+        missing_arr = []
+        
+        for skill in req:
+            if skill.lower() in skills:
+                matches += 1
+            else:
+                missing_arr.append(skill)
+        
+        report.append({
+            "title": title,
+            "total": total,
+            "matches": matches,
+            "value": matches / total,
+            "missing": missing_arr
+        })
+        
+    report.sort(key=lambda x: x['value'], reverse=True)
+        
+    for i, job in enumerate(report):
+        value = job["value"]
+        percent = math.ceil(value * 100)
+        print(f"{i + 1}. {job["title"]} - {percent}% ({job["matches"]}/{job["total"]})")
+        if percent != 100:
+            print(f"Missing: {job['missing']}")
+
+
+@app.route("/test")
+def test_func():
+    evaluate_skills(['Python', 'HTML', 'SQL'])
+    return jsonify({"msg": "passed"}), 200
+    
+
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
     engine.close()

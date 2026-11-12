@@ -1,5 +1,4 @@
 from database import grab_all, grab_one, create_entry, update_entry, delete_entry, engine
-from datetime import datetime
 
 
 # Create
