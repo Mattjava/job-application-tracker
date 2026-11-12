@@ -13,3 +13,14 @@ search process.
 - MySQL Database
 - Python with Flask
 - HTML/CSS for the web interface
+
+# Set-up
+
+1: Install and deploy a MySQL server
+2: Run schema.sql to create the database
+3: Create an .env variable based off of .env.example
+4: Replace the placeholders with the log-in credentials of your database server
+5: Create a virtual environment in the directory using "python -m venv venv"
+6: Activate your virtual environment (run either venv/Source/activate on Windows or source venv/bin/activate on Linux/MacOS)
+7: Run "pip install -r requirements.txt" to install the dependences
+8: Run "python app.py" to run the app 
