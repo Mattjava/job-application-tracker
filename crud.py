@@ -94,7 +94,7 @@ def show_all_applications():
     try:
         entities = grab_all('applications')
     except Exception as e:
-            raise E
+            raise e
         
     return entities
 
@@ -103,7 +103,7 @@ def show_all_jobs():
     try:
         entities = grab_all('jobs')
     except Exception as e:
-            raise E
+            raise e
         
     return entities
 
@@ -112,7 +112,7 @@ def show_all_contacts():
     try:
         entities = grab_all('contacts')
     except Exception as e:
-            raise E
+            raise e
         
     return entities
 
@@ -121,7 +121,7 @@ def show_all_companies():
     try:
         entities = grab_all('companies')
     except Exception as e:
-        raise E
+        raise e
     
     return entities
 
@@ -176,7 +176,7 @@ def get_one_contact(contact_id):
 # Update
 
 
-def update_application(app_id):
+def update_application(raw):
     # body = request.get_json()
         
     # raw = (body['job_id'] if 'job_id' in body else None, 
@@ -197,7 +197,7 @@ def update_application(app_id):
         return True
     
 
-def update_contact(contact_id):
+def update_contact(raw):
     # body = request.get_json()
         
     # raw = ( body['company_id'] if 'company_id' in body else None,
@@ -242,7 +242,7 @@ def update_job(raw):
     
 
 
-def update_company(body):
+def update_company(raw):
     # body = request.get_json()
         
     # raw = (body['company_name'] if 'company_name' in body else None, 
