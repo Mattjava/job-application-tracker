@@ -83,7 +83,7 @@ def home_page():
 def app_page():
     all_apps = show_all_applications()
     
-    return render_template("applications.html", applications=all_apps)
+    return render_template("applications.html", applications=all_apps, jobs=show_all_jobs(), companies=show_all_companies())
 
 @app.route("/company")
 def company_page():
@@ -95,13 +95,13 @@ def company_page():
 def job_page():
     jobs = show_all_jobs()
     
-    return render_template("jobs.html", jobs=jobs)
+    return render_template("jobs.html", jobs=jobs, companies=show_all_companies())
 
 @app.route("/contacts")
 def contact_page():
     contacts = show_all_contacts()
     
-    return render_template("contacts.html", contacts=contacts)
+    return render_template("contacts.html", contacts=contacts, companies=show_all_companies())
 
 @app.route("/job-match", methods=["GET", "POST"])
 def job_match():
@@ -139,6 +139,8 @@ def add_company():
         return render_template("company_form.html")
     
     body = normalize(dict(request.form))
+    
+    
     
     raw = (body['company_name'] if 'company_name' in body else None, 
         body['industry'] if 'industry' in body else None,

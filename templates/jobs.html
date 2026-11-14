@@ -50,7 +50,7 @@
                 <tr>
                     <td>{{ job.job_id }}</td>
                     <td>{{ job.job_title }}</td>
-                    <td>{{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}</td>
+                    <td>{{ company_lookup.get(job.company_id, "-") }}</td>
                     <td>{{ m.show(job.job_type) }}</td>
                     <td>
                         {% if job.salary_min is none and job.salary_max is none %}—

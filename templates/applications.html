@@ -54,7 +54,7 @@
                 <tr>
                     <td>{{ app.application_id }}</td>
                     <td>{{ job.job_title if job else "Job #" ~ app.job_id }}</td>
-                    <td>{{ m.show(company_lookup.get(job.company_id)) if job else "—" }}</td>
+                    <td>{{ m.show(company_lookup.get(job.company_id, "Company #" ~ job.company_id)) if job else "—" }}</td>
                     <td>{{ m.show(app.application_date) }}</td>
                     <td>{{ m.show(app.status) }}</td>
                     <td>{{ m.show(app.resume_version) }}</td>
