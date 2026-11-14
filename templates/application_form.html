@@ -1,0 +1,114 @@
+{#
+    Add / edit an application. The same page is used for both.
+
+    Variables this template expects from the route:
+        application - (edit only) the row from get_one_application(id). Leave it out when adding.
+        jobs        - rows from show_all_jobs()       (fills the Job dropdown)
+        companies   - rows from show_all_companies()  (shows "Job at Company" in the dropdown)
+
+    Submits (POST) to:
+        /apps/add                        when adding
+        /apps/<application_id>/edit      when editing
+
+    Field names match the columns in the applications table.
+    Note: an unchecked checkbox is not sent at all, so read cover_letter_sent as
+    `1 if "cover_letter_sent" in request.form else 0`.
+#}
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+
+{% set editing = application is defined and application %}
+{% set app = application if editing else {} %}
+
+{% block title %}{{ "Edit" if editing else "Add" }} application{% endblock %}
+
+{% block content %}
+    {% set company_lookup = {} %}
+    {% for company in companies | default([]) %}{% set _ = company_lookup.update({company.company_id: company.company_name}) %}{% endfor %}
+
+    <h1>{{ "Edit application #" ~ app.application_id if editing else "Add application" }}</h1>
+
+    <form method="post" action="{{ url_for('edit_application_page', app_id=app.application_id) if editing else url_for('add_app') }}">
+        <fieldset>
+            <legend>Job</legend>
+
+            <p>
+                <label for="job_id">Job *</label><br>
+                <select id="job_id" name="job_id" required>
+                    <option value="">Select a job…</option>
+                    {% for job in jobs | default([]) | sort(attribute="job_title") %}
+                        <option value="{{ job.job_id }}" {{ "selected" if app.job_id == job.job_id }}>
+                            {{ job.job_title }} at {{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}
+                        </option>
+                    {% endfor %}
+                </select>
+                <br><small>Don't see it? <a href="{{ url_for('add_job') }}">Add the job first.</a></small>
+            </p>
+        </fieldset>
+
+        <fieldset>
+            <legend>Application</legend>
+
+            <p>
+                <label for="application_date">Date applied *</label><br>
+                <input type="date" id="application_date" name="application_date" required
+                       value="{{ app.application_date or '' }}">
+            </p>
+
+            <p>
+                <label for="status">Status</label><br>
+                <select id="status" name="status">
+                    {% for group, statuses in m.STATUS_GROUPS.items() %}
+                        <optgroup label="{{ group }}">
+                            {% for status in statuses %}
+                                <option value="{{ status }}" {{ "selected" if (app.status or "Applied") == status }}>{{ status }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    {% endfor %}
+                    {# Keep any older status that isn't in the list above so editing doesn't silently change it. #}
+                    {% if app.status and app.status not in m.STATUSES %}
+                        <option value="{{ app.status }}" selected>{{ app.status }}</option>
+                    {% endif %}
+                </select>
+            </p>
+
+            <p>
+                <label for="resume_version">Resume version</label><br>
+                <input type="text" id="resume_version" name="resume_version" maxlength="50"
+                       placeholder="e.g. v2.1" value="{{ app.resume_version or '' }}">
+            </p>
+
+            <p>
+                <input type="checkbox" id="cover_letter_sent" name="cover_letter_sent" value="1"
+                       {{ "checked" if app.cover_letter_sent }}>
+                <label for="cover_letter_sent">Cover letter sent</label>
+            </p>
+        </fieldset>
+
+        <fieldset>
+            <legend>Follow-up</legend>
+
+            <p>
+                <label for="response_date">Response date</label><br>
+                <input type="date" id="response_date" name="response_date"
+                       value="{{ app.response_date or '' }}">
+            </p>
+
+            <p>
+                <label for="interview_date">Interview date &amp; time</label><br>
+                <input type="datetime-local" id="interview_date" name="interview_date"
+                       value="{{ app.interview_date.strftime('%Y-%m-%dT%H:%M') if app.interview_date else '' }}">
+            </p>
+
+            <p>
+                <label for="notes">Notes</label><br>
+                <textarea id="notes" name="notes" rows="5" cols="60">{{ app.notes or '' }}</textarea>
+            </p>
+        </fieldset>
+
+        <p>
+            <button type="submit">{{ "Save changes" if editing else "Add application" }}</button>
+            <a href="{{ url_for('app_page') }}">Cancel</a>
+        </p>
+    </form>
+{% endblock %}

@@ -1,11 +1,84 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{#
+    Jobs list.
+
+    Variables this template expects from the route:
+        jobs      - rows from show_all_jobs()
+        companies - rows from show_all_companies()  (used to show the company name instead of company_id)
+
+    Links / forms on this page point to:
+        GET  /jobs/add             -> job_form.html (new)
+        GET  /jobs/<job_id>/edit   -> job_form.html (edit)
+        POST /jobs/<job_id>/delete
+#}
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+
+{% block title %}Jobs{% endblock %}
+
+{% block content %}
+    {% set company_lookup = {} %}
+    {% for company in companies | default([]) %}{% set _ = company_lookup.update({company.company_id: company.company_name}) %}{% endfor %}
+
+    {% set all_jobs = jobs | default([]) %}
+    {% set active_count = all_jobs | selectattr("is_active") | list | length %}
+
     <h1>Jobs</h1>
-</body>
-</html>
+    <p>Job postings you are tracking.</p>
+
+    <p><a href="{{ url_for('add_job') }}">+ Add job</a></p>
+
+    <p>{{ all_jobs | length }} job{{ "" if all_jobs | length == 1 else "s" }} ({{ active_count }} active)</p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Title</th>
+                <th scope="col">Company</th>
+                <th scope="col">Type</th>
+                <th scope="col">Salary range</th>
+                <th scope="col">Date posted</th>
+                <th scope="col">Active</th>
+                <th scope="col">Required skills</th>
+                <th scope="col">Description</th>
+                <th scope="col">Posting</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in all_jobs %}
+                <tr>
+                    <td>{{ job.job_id }}</td>
+                    <td>{{ job.job_title }}</td>
+                    <td>{{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}</td>
+                    <td>{{ m.show(job.job_type) }}</td>
+                    <td>
+                        {% if job.salary_min is none and job.salary_max is none %}—
+                        {% else %}{{ m.money(job.salary_min) }} – {{ m.money(job.salary_max) }}{% endif %}
+                    </td>
+                    <td>{{ m.show(job.date_posted) }}</td>
+                    <td>{{ m.yes_no(job.is_active) }}</td>
+                    <td>{{ m.show(m.requirements_text(job.requirements)) }}</td>
+                    <td>
+                        {% if job.job_description %}
+                            <details>
+                                <summary>View</summary>
+                                {{ job.job_description }}
+                            </details>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>{{ m.external_link(job.posting_url, "Open") }}</td>
+                    <td>
+                        <a href="{{ url_for('edit_job_page', job_id=job.job_id) }}">Edit</a>
+                        {{ m.delete_button(url_for("delete_job_route", job_id=job.job_id), job.job_title,
+                                           " Jobs that have applications cannot be deleted until those applications are removed.") }}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="11">No jobs yet. <a href="{{ url_for('add_job') }}">Add your first one.</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

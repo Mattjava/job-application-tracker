@@ -1,11 +1,206 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-</head>
-<body>
-    <h1>Welcome!</h1>
-</body>
-</html>
+{#
+    Dashboard (home page). All statistics are worked out here in the template,
+    so the route only has to pass the raw rows.
+
+    Variables this template expects from the route:
+        applications - rows from show_all_applications()
+        jobs         - rows from show_all_jobs()
+        companies    - rows from show_all_companies()
+        contacts     - rows from show_all_contacts()
+
+    Status groups (Waiting / Interviewing / Offer / Closed) come from macros.html.
+#}
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+    {% set apps = applications | default([]) %}
+    {% set all_jobs = jobs | default([]) %}
+    {% set all_companies = companies | default([]) %}
+    {% set all_contacts = contacts | default([]) %}
+
+    {# Lookups so we can show "Job title at Company" instead of IDs #}
+    {% set company_lookup = {} %}
+    {% for company in all_companies %}{% set _ = company_lookup.update({company.company_id: company.company_name}) %}{% endfor %}
+    {% set job_lookup = {} %}
+    {% for job in all_jobs %}{% set _ = job_lookup.update({job.job_id: job}) %}{% endfor %}
+
+    {# Application counts by pipeline stage #}
+    {% set total = apps | length %}
+    {% set waiting = apps | selectattr("status", "in", m.STATUS_GROUPS["Waiting"]) | list %}
+    {% set interviewing = apps | selectattr("status", "in", m.STATUS_GROUPS["Interviewing"]) | list %}
+    {% set offers = apps | selectattr("status", "in", m.STATUS_GROUPS["Offer"]) | list %}
+    {% set closed = apps | selectattr("status", "in", m.STATUS_GROUPS["Closed"]) | list %}
+    {% set cover_letters = apps | selectattr("cover_letter_sent") | list | length %}
+
+    {# Rates: "heard back" = anything that has moved past Applied/Pending #}
+    {% set heard_back = total - (waiting | length) %}
+    {% set response_rate = (heard_back / total * 100) | round | int if total else 0 %}
+    {% set interview_rate = ((interviewing | length + offers | length) / total * 100) | round | int if total else 0 %}
+
+    {# Jobs #}
+    {% set active_jobs = all_jobs | selectattr("is_active") | list %}
+    {% set applied_job_ids = apps | map(attribute="job_id") | list %}
+    {% set not_applied = active_jobs | rejectattr("job_id", "in", applied_job_ids) | list %}
+
+    {% macro job_label(job_id) -%}
+        {%- set job = job_lookup.get(job_id) -%}
+        {%- if job -%}{{ job.job_title }} at {{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}
+        {%- else -%}Job #{{ job_id }}{%- endif -%}
+    {%- endmacro %}
+
+    <h1>Dashboard</h1>
+    <p>An overview of your job search.</p>
+
+    <section>
+        <h2>At a glance</h2>
+        <dl>
+            <dt>Applications sent</dt>
+            <dd>{{ total }}</dd>
+
+            <dt>Waiting to hear back</dt>
+            <dd>{{ waiting | length }}</dd>
+
+            <dt>Interviewing</dt>
+            <dd>{{ interviewing | length }}</dd>
+
+            <dt>Offers</dt>
+            <dd>{{ offers | length }}</dd>
+
+            <dt>Rejected / closed</dt>
+            <dd>{{ closed | length }}</dd>
+        </dl>
+    </section>
+
+    <section>
+        <h2>How it's going</h2>
+        <dl>
+            <dt>Response rate</dt>
+            <dd>
+                <meter min="0" max="100" value="{{ response_rate }}">{{ response_rate }}%</meter>
+                {{ response_rate }}% ({{ heard_back }} of {{ total }} applications got a response)
+            </dd>
+
+            <dt>Interview rate</dt>
+            <dd>
+                <meter min="0" max="100" value="{{ interview_rate }}">{{ interview_rate }}%</meter>
+                {{ interview_rate }}% ({{ interviewing | length + offers | length }} of {{ total }} reached an interview or offer)
+            </dd>
+
+            <dt>Cover letters sent</dt>
+            <dd>{{ cover_letters }} of {{ total }}</dd>
+        </dl>
+    </section>
+
+    <section>
+        <h2>Applications by status</h2>
+        {% if total %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th scope="col">Status</th>
+                        <th scope="col">Count</th>
+                        <th scope="col">Share</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {# Known statuses in pipeline order, then any other status found in the data #}
+                    {% set other_statuses = apps | map(attribute="status") | reject("in", m.STATUSES) | unique | list %}
+                    {% for status in m.STATUSES + other_statuses %}
+                        {% set count = apps | selectattr("status", "equalto", status) | list | length %}
+                        {% if count %}
+                            {% set share = (count / total * 100) | round | int %}
+                            <tr>
+                                <td>{{ m.show(status) }}</td>
+                                <td>{{ count }}</td>
+                                <td>
+                                    <meter min="0" max="100" value="{{ share }}">{{ share }}%</meter>
+                                    {{ share }}%
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No applications yet. <a href="{{ url_for('add_app') }}">Add your first one.</a></p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Interviews</h2>
+        {% set with_interview = apps | selectattr("interview_date") | sort(attribute="interview_date") | list %}
+        {% if with_interview %}
+            <ul>
+                {% for app in with_interview %}
+                    <li>
+                        <strong>{{ app.interview_date.strftime("%a, %b %d %Y at %I:%M %p") }}</strong> —
+                        {{ job_label(app.job_id) }} ({{ app.status }})
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No interviews scheduled. Add an interview date to an application to see it here.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Recent applications</h2>
+        {% set recent = (apps | sort(attribute="application_date", reverse=true) | list)[:5] %}
+        {% if recent %}
+            <table border="1">
+                <thead>
+                    <tr>
+                        <th scope="col">Date applied</th>
+                        <th scope="col">Job</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in recent %}
+                        <tr>
+                            <td>{{ app.application_date }}</td>
+                            <td>{{ job_label(app.job_id) }}</td>
+                            <td>{{ m.show(app.status) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <p><a href="{{ url_for('app_page') }}">See all applications</a></p>
+        {% else %}
+            <p>Nothing here yet.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Open jobs you haven't applied to</h2>
+        {% if not_applied %}
+            <p>{{ not_applied | length }} active job{{ "" if not_applied | length == 1 else "s" }} with no application yet:</p>
+            <ul>
+                {% for job in not_applied[:5] %}
+                    <li>
+                        {{ job_label(job.job_id) }}
+                        {% if job.salary_min is not none or job.salary_max is not none %}
+                            ({{ m.money(job.salary_min) }} – {{ m.money(job.salary_max) }})
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if not_applied | length > 5 %}<p>…and {{ not_applied | length - 5 }} more.</p>{% endif %}
+            <p><a href="{{ url_for('job_page') }}">See all jobs</a> · <a href="{{ url_for('test_func') }}">Check how well you match</a></p>
+        {% else %}
+            <p>You've applied to every active job you're tracking.</p>
+        {% endif %}
+    </section>
+
+    <section>
+        <h2>Your tracker</h2>
+        <ul>
+            <li><a href="{{ url_for('company_page') }}">{{ all_companies | length }} companies</a></li>
+            <li><a href="{{ url_for('job_page') }}">{{ all_jobs | length }} jobs</a> ({{ active_jobs | length }} active)</li>
+            <li><a href="{{ url_for('contact_page') }}">{{ all_contacts | length }} contacts</a></li>
+        </ul>
+    </section>
+{% endblock %}

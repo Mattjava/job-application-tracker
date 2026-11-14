@@ -1,34 +1,180 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <h1>Jobs Match</h1>
-    <h2>Your skills: 
-        {% for skill in skills%}
-            {% if skill != skills[-1]%}
-                {{skill}},
-            {% else %}
-                {{skill}}
-            {% endif %}
+{#
+    Job Match: compares the user's skills to each job's requirements.
+
+    Variables this template expects from the route (already passed by app.py):
+        skills - list of skill strings, e.g. ["Python", "HTML", "SQL"]
+        report - list from evaluate_skills(skills), sorted best match first. Each item has:
+                 title, total, matches, value, percent, missing
+
+    The "Update skills" form sends GET /job-match?skills=Python,+SQL,+HTML
+    (the route currently uses a hard-coded list, so it would need to read request.args to use this).
+#}
+{% extends "base.html" %}
+
+{% block title %}Job Match{% endblock %}
+
+{% macro match_table(jobs, ranked) %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th scope="col">Rank</th>
+                <th scope="col">Job</th>
+                <th scope="col">Match</th>
+                <th scope="col">Skills you have</th>
+                <th scope="col">Missing skills</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for job in jobs %}
+                <tr>
+                    <td>#{{ ranked.index(job) + 1 }}</td>
+                    <td>{{ job.title }}</td>
+                    <td>
+                        <meter min="0" max="100" low="50" high="99" optimum="100" value="{{ job.percent }}">{{ job.percent }}%</meter>
+                        {{ job.percent }}%
+                    </td>
+                    <td>{{ job.matches }} of {{ job.total }}</td>
+                    <td>
+                        {% if job.missing %}
+                            <ul>
+                                {% for skill in job.missing %}<li>{{ skill }}</li>{% endfor %}
+                            </ul>
+                        {% else %}
+                            None, you meet every requirement.
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}
+
+{% block content %}
+    {% set results = report | default([]) %}
+    {% set my_skills = skills | default([]) %}
+
+    {# Split jobs into tiers #}
+    {% set full_matches = results | selectattr("percent", "ge", 100) | list %}
+    {% set close_matches = results | selectattr("percent", "ge", 50) | selectattr("percent", "lt", 100) | list %}
+    {% set stretch_matches = results | selectattr("percent", "lt", 50) | list %}
+    {% set average = ((results | sum(attribute="percent")) / (results | length)) | round | int if results else 0 %}
+
+    {# Count how many jobs each missing skill appears in #}
+    {% set missing_counts = {} %}
+    {% for job in results %}
+        {% for skill in job.missing %}
+            {% set _ = missing_counts.update({skill: missing_counts.get(skill, 0) + 1}) %}
         {% endfor %}
-    </h2>
-    {% for job in report %}
-        <h3>{{job.title}} -  {{job.percent}}%({{job.matches}}/{{job.total}})</h3>
-        {%if job.percent != 100 %}
-            <p>Missing:  
-                {% for skill in job.missing %}
-                    {% if skill != job.missing[-1] %}
-                        {{skill}}, 
-                    {% else %}
-                        {{skill}}
-                    {% endif %}
-                {% endfor %}
-            </p>
-        {% endif %}
     {% endfor %}
-</body>
-</html>
+
+    <h1>Job Match</h1>
+    <p>How your skills line up with the required skills listed on each job you're tracking.</p>
+
+    <section>
+        <h2>Your skills</h2>
+        {% if my_skills %}
+            <ul>
+                {% for skill in my_skills %}<li>{{ skill }}</li>{% endfor %}
+            </ul>
+        {% else %}
+            <p>No skills entered yet.</p>
+        {% endif %}
+
+        <form method="get" action="{{ url_for('test_func') }}">
+            <label for="skills">Update your skills (comma-separated)</label><br>
+            <input type="text" id="skills" name="skills" size="60"
+                   placeholder="e.g. Python, SQL, HTML" value="{{ my_skills | join(', ') }}">
+            <button type="submit">Re-run match</button>
+        </form>
+    </section>
+
+    {% if not results %}
+        <section>
+            <h2>No jobs to compare</h2>
+            <p>
+                None of your jobs list any required skills yet.
+                <a href="{{ url_for('job_page') }}">Add required skills to a job</a> to see how you match.
+            </p>
+        </section>
+    {% else %}
+        <section>
+            <h2>Summary</h2>
+            <dl>
+                <dt>Jobs compared</dt>
+                <dd>{{ results | length }}</dd>
+
+                <dt>Ready to apply (100% match)</dt>
+                <dd>{{ full_matches | length }}</dd>
+
+                <dt>Close (50–99% match)</dt>
+                <dd>{{ close_matches | length }}</dd>
+
+                <dt>Stretch (under 50% match)</dt>
+                <dd>{{ stretch_matches | length }}</dd>
+
+                <dt>Average match</dt>
+                <dd>
+                    <meter min="0" max="100" low="50" high="99" optimum="100" value="{{ average }}">{{ average }}%</meter>
+                    {{ average }}%
+                </dd>
+            </dl>
+        </section>
+
+        <section>
+            <h2>Best match</h2>
+            {% set best = results[0] %}
+            <p>
+                <strong>{{ best.title }}</strong>, {{ best.percent }}% match
+                ({{ best.matches }} of {{ best.total }} required skills).
+                {% if best.missing %}
+                    You're missing: {{ best.missing | join(", ") }}.
+                {% else %}
+                    You meet every requirement.
+                {% endif %}
+            </p>
+        </section>
+
+        <section>
+            <h2>Ready to apply</h2>
+            <p>You have every skill these jobs ask for.</p>
+            {% if full_matches %}{{ match_table(full_matches, results) }}{% else %}<p>No jobs in this group yet.</p>{% endif %}
+        </section>
+
+        <section>
+            <h2>Close matches</h2>
+            <p>You have at least half of the required skills.</p>
+            {% if close_matches %}{{ match_table(close_matches, results) }}{% else %}<p>No jobs in this group.</p>{% endif %}
+        </section>
+
+        <section>
+            <h2>Stretch jobs</h2>
+            <p>You have less than half of the required skills.</p>
+            {% if stretch_matches %}{{ match_table(stretch_matches, results) }}{% else %}<p>No jobs in this group.</p>{% endif %}
+        </section>
+
+        <section>
+            <h2>Skills to learn next</h2>
+            {% if missing_counts %}
+                <p>Skills you're missing, ordered by how many jobs ask for them.</p>
+                <table border="1">
+                    <thead>
+                        <tr>
+                            <th scope="col">Skill</th>
+                            <th scope="col">Jobs that require it</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for skill, count in missing_counts | dictsort(by="value", reverse=true) %}
+                            <tr>
+                                <td>{{ skill }}</td>
+                                <td>{{ count }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>Nothing. You cover every skill listed across your jobs.</p>
+            {% endif %}
+        </section>
+    {% endif %}
+{% endblock %}

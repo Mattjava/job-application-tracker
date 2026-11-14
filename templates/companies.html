@@ -1,12 +1,78 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
+{#
+    Companies list.
+
+    Variables this template expects from the route:
+        companies - rows from show_all_companies()
+        jobs      - (optional) rows from show_all_jobs()     (used for the "Jobs" count column)
+        contacts  - (optional) rows from show_all_contacts() (used for the "Contacts" count column)
+
+    Links / forms on this page point to:
+        GET  /company/add                -> company_form.html (new)
+        GET  /company/<company_id>/edit  -> company_form.html (edit)
+        POST /company/<company_id>/delete
+#}
+{% extends "base.html" %}
+{% import "macros.html" as m %}
+
+{% block title %}Companies{% endblock %}
+
+{% block content %}
+    {% set all_companies = companies | default([]) %}
+
     <h1>Companies</h1>
-    
-</body>
-</html>
+    <p>Companies you are interested in or have applied to.</p>
+
+    <p><a href="{{ url_for('add_company') }}">+ Add company</a></p>
+
+    <p>{{ all_companies | length }} compan{{ "y" if all_companies | length == 1 else "ies" }}</p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Industry</th>
+                <th scope="col">Location</th>
+                <th scope="col">Website</th>
+                {% if jobs is defined %}<th scope="col">Jobs</th>{% endif %}
+                {% if contacts is defined %}<th scope="col">Contacts</th>{% endif %}
+                <th scope="col">Notes</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for company in all_companies | sort(attribute="company_name") %}
+                <tr>
+                    <td>{{ company.company_id }}</td>
+                    <td>{{ company.company_name }}</td>
+                    <td>{{ m.show(company.industry) }}</td>
+                    <td>{{ m.show([company.city, company.state] | select | join(", ")) }}</td>
+                    <td>{{ m.external_link(company.website) }}</td>
+                    {% if jobs is defined %}
+                        <td>{{ jobs | selectattr("company_id", "equalto", company.company_id) | list | length }}</td>
+                    {% endif %}
+                    {% if contacts is defined %}
+                        <td>{{ contacts | selectattr("company_id", "equalto", company.company_id) | list | length }}</td>
+                    {% endif %}
+                    <td>
+                        {% if company.notes %}
+                            <details>
+                                <summary>View</summary>
+                                {{ company.notes }}
+                            </details>
+                        {% else %}—{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('edit_company_page', company_id=company.company_id) }}">Edit</a>
+                        {{ m.delete_button(url_for("delete_company_route", company_id=company.company_id), company.company_name,
+                                           " Companies that still have jobs or contacts cannot be deleted until those are removed.") }}
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="9">No companies yet. <a href="{{ url_for('add_company') }}">Add your first one.</a></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

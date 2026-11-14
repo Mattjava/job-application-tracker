@@ -110,8 +110,9 @@ def delete_entry(table_name: str, id: int):
     
     try:
         cursor = engine.cursor(dictionary=True)
-        query = f"DELETE * FROM {table_name} where {keys[table_name]} = %s"
+        query = f"DELETE FROM {table_name} where {keys[table_name]} = %s"
         cursor.execute(query, (id,))
+        engine.commit()
         cursor.close()
         return "Successfully deleted"
     except Exception as e:

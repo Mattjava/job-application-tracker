@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Home{% endblock %} | Job Application Tracker</title>
+</head>
+<body>
+    <header>
+        <p><strong>Job Application Tracker</strong></p>
+        <nav>
+            <ul>
+                <li><a href="{{ url_for('home_page') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('app_page') }}">Applications</a></li>
+                <li><a href="{{ url_for('job_page') }}">Jobs</a></li>
+                <li><a href="{{ url_for('company_page') }}">Companies</a></li>
+                <li><a href="{{ url_for('contact_page') }}">Contacts</a></li>
+                <li><a href="{{ url_for('test_func') }}">Job Match</a></li>
+            </ul>
+        </nav>
+        <hr>
+    </header>
+
+    {# Shows any messages the backend sends with flask.flash(), e.g. "Application saved." #}
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <section aria-label="Messages">
+                <ul>
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+    {% endwith %}
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

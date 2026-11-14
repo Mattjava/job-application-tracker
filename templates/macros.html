@@ -1,0 +1,61 @@
+{#
+    Shared constants and helpers. Import into a template with:
+        {% import "macros.html" as m %}
+    and then use e.g. m.STATUSES or {{ m.delete_button(url_for("delete_app_route", app_id=1), "this application") }}
+#}
+
+{# Application statuses, grouped by pipeline stage.
+   The application form and the dashboard both read from this, so edit it here only. #}
+{% set STATUS_GROUPS = {
+    "Waiting":      ["Applied", "Pending"],
+    "Interviewing": ["Phone Screen", "Interview Scheduled", "Interview Completed"],
+    "Offer":        ["Offer Received", "Offer Accepted"],
+    "Closed":       ["Rejected", "Withdrawn", "Offer Declined"]
+} %}
+
+{% set STATUSES = STATUS_GROUPS["Waiting"] + STATUS_GROUPS["Interviewing"] + STATUS_GROUPS["Offer"] + STATUS_GROUPS["Closed"] %}
+
+{% set JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Temporary"] %}
+
+
+{# Prints the value, or a dash when it is empty. #}
+{% macro show(value) -%}
+    {%- if value is none or value == "" -%}—{%- else -%}{{ value }}{%- endif -%}
+{%- endmacro %}
+
+
+{# Prints "Yes"/"No" for tinyint(1) columns like cover_letter_sent and is_active. #}
+{% macro yes_no(value) -%}
+    {%- if value -%}Yes{%- else -%}No{%- endif -%}
+{%- endmacro %}
+
+
+{# Formats a salary like 75000.00 as $75,000. #}
+{% macro money(value) -%}
+    {%- if value is none -%}—{%- else -%}${{ "{:,.0f}".format(value) }}{%- endif -%}
+{%- endmacro %}
+
+
+{# Link that opens in a new tab. Adds https:// when the stored URL has no scheme (e.g. "www.example.com"). #}
+{% macro external_link(url, text=None) -%}
+    {%- if url -%}
+        {%- set href = url if url.startswith("http://") or url.startswith("https://") else "https://" ~ url -%}
+        <a href="{{ href }}" target="_blank" rel="noopener noreferrer">{{ text or url }}</a>
+    {%- else -%}—{%- endif -%}
+{%- endmacro %}
+
+
+{# Turns the JSON requirements string from the jobs table ('["Java", "SQL"]') into "Java, SQL". #}
+{% macro requirements_text(raw) -%}
+    {%- if raw -%}{{ raw | replace("[", "") | replace("]", "") | replace('"', "") }}{%- endif -%}
+{%- endmacro %}
+
+
+{# Small POST form with a confirmation prompt, used for every Delete button. #}
+{% macro delete_button(action, what, extra_warning="") -%}
+    {%- set message = "Delete " ~ what ~ "? This cannot be undone." ~ extra_warning -%}
+    <form method="post" action="{{ action }}"
+          onsubmit='return confirm({{ message | tojson }});'>
+        <button type="submit">Delete</button>
+    </form>
+{%- endmacro %}
