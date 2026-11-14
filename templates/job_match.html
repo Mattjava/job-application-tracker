@@ -7,5 +7,28 @@
 </head>
 <body>
     <h1>Jobs Match</h1>
+    <h2>Your skills: 
+        {% for skill in skills%}
+            {% if skill != skills[-1]%}
+                {{skill}},
+            {% else %}
+                {{skill}}
+            {% endif %}
+        {% endfor %}
+    </h2>
+    {% for job in report %}
+        <h3>{{job.title}} -  {{job.percent}}%({{job.matches}}/{{job.total}})</h3>
+        {%if job.percent != 100 %}
+            <p>Missing:  
+                {% for skill in job.missing %}
+                    {% if skill != job.missing[-1] %}
+                        {{skill}}, 
+                    {% else %}
+                        {{skill}}
+                    {% endif %}
+                {% endfor %}
+            </p>
+        {% endif %}
+    {% endfor %}
 </body>
 </html>

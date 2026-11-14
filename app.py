@@ -3,10 +3,9 @@ from crud import *
 from datetime import datetime
 import json, math
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 def evaluate_skills(skills):
-    print(f"Your skills: {skills}\n")
     skills = [skill.lower() for skill in skills]
     
     jobs = show_all_jobs()
@@ -36,23 +35,28 @@ def evaluate_skills(skills):
                 matches += 1
             else:
                 missing_arr.append(skill)
+                
+        value = matches / total
         
         report.append({
             "title": title,
             "total": total,
             "matches": matches,
-            "value": matches / total,
+            "value": value,
+            "percent": math.ceil(value * 100),
             "missing": missing_arr
         })
         
     report.sort(key=lambda x: x['value'], reverse=True)
         
-    for i, job in enumerate(report):
-        value = job["value"]
-        percent = math.ceil(value * 100)
-        print(f"{i + 1}. {job["title"]} - {percent}% ({job["matches"]}/{job["total"]})")
-        if percent != 100:
-            print(f"Missing: {job['missing']}")
+    # for i, job in enumerate(report):
+    #     value = job["value"]
+    #     percent = math.ceil(value * 100)
+    #     print(f"{i + 1}. {job["title"]} - {percent}% ({job["matches"]}/{job["total"]})")
+    #     if percent != 100:
+    #         print(f"Missing: {job['missing']}")
+    
+    return report
             
 @app.route("/")
 def home_page():
@@ -92,8 +96,9 @@ def contact_page():
 
 @app.route("/job-match")
 def test_func():
-    evaluate_skills(['Python', 'HTML', 'SQL'])
-    return render_template("job_match.html")
+    skills = ['Python', 'HTML', 'SQL']
+    report = evaluate_skills(skills)
+    return render_template("job_match.html", report=report, skills=skills)
     
 
 if __name__ == '__main__':
