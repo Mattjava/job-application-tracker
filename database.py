@@ -56,7 +56,7 @@ def grab_one(table_name, id):
 def create_entry(table_name: str, data: tuple):
     queries = {
         "applications": "INSERT INTO applications(job_id, application_date, status, resume_version, cover_letter_sent, response_date, interview_date, notes, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s);",
-        "jobs": "INSERT INTO jobs(company_id, job_title, job_description, salary_min, salary_max, job_type, posting_url, date_posted, is_active, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+        "jobs": "INSERT INTO jobs(company_id, job_title, job_description, salary_min, salary_max, job_type, posting_url, date_posted, is_active, requirements, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
         "contacts": "INSERT INTO contacts(company_id, first_name, last_name, email, phone, job_title, linkedin_url, notes, created_at) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s);",
         "companies": "INSERT INTO companies(company_name, industry, website, city, state, notes, created_at) VALUES (%s, %s, %s, %s, %s, %s, %s);"
     }
@@ -83,7 +83,7 @@ def update_entry(table_name: str, data: tuple):
     queries = {
         "contacts": "UPDATE contacts SET company_id = %s, first_name = %s, last_name = %s, email = %s, phone = %s, job_title = %s, linkedin_url = %s, notes = %s WHERE contact_id = %s",
         "companies": "UPDATE companies SET company_name = %s, industry = %s, website = %s, city = %s, state = %s, notes = %s WHERE company_id = %s",
-        "jobs": "UPDATE jobs SET company_id = %s, job_title = %s, job_description = %s, salary_min = %s, salary_max = %s, job_type = %s, posting_url = %s, date_posted = %s, is_active = %s WHERE job_id = %s",
+        "jobs": "UPDATE jobs SET company_id = %s, job_title = %s, job_description = %s, salary_min = %s, salary_max = %s, job_type = %s, posting_url = %s, date_posted = %s, is_active = %s, requirements = %s WHERE job_id = %s",
         "applications": "UPDATE applications SET job_id = %s, application_date = %s, status = %s, resume_version = %s, cover_letter_sent = %s, response_date = %s, interview_date = %s, notes = %s WHERE application_id = %s"
     }
     

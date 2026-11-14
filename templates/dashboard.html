@@ -189,7 +189,7 @@
                 {% endfor %}
             </ul>
             {% if not_applied | length > 5 %}<p>…and {{ not_applied | length - 5 }} more.</p>{% endif %}
-            <p><a href="{{ url_for('job_page') }}">See all jobs</a> · <a href="{{ url_for('test_func') }}">Check how well you match</a></p>
+            <p><a href="{{ url_for('job_page') }}">See all jobs</a> · <a href="{{ url_for('job_match') }}">Check how well you match</a></p>
         {% else %}
             <p>You've applied to every active job you're tracking.</p>
         {% endif %}

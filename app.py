@@ -11,6 +11,9 @@ def normalize(raw_form):
         
         if value == '':
             raw_form[key] = None
+        elif key == "requirements":
+            value = value.split(', ')
+            raw_form[key] = json.dumps(value)
             
     return raw_form
             
@@ -70,7 +73,11 @@ def evaluate_skills(skills):
             
 @app.route("/")
 def home_page():
-    return render_template("dashboard.html")
+    return render_template("dashboard.html",
+                           applications=show_all_applications(),
+                           companies=show_all_companies(),
+                           jobs=show_all_jobs(),
+                           contacts=show_all_contacts())
             
 @app.route("/apps")
 def app_page():
@@ -96,9 +103,10 @@ def contact_page():
     
     return render_template("contacts.html", contacts=contacts)
 
-@app.route("/job-match")
-def test_func():
-    skills = ['Python', 'HTML', 'SQL']
+@app.route("/job-match", methods=["GET", "POST"])
+def job_match():
+    body = request.args
+    skills = body.get('skills').split(', ') if 'skills' in body else []
     report = evaluate_skills(skills)
     return render_template("job_match.html", report=report, skills=skills)
 
@@ -118,6 +126,7 @@ def add_job():
                body['posting_url'] if 'posting_url' in body else None, 
                body['date_posted'] if 'date_posted' in body else None, 
                body['is_active'] if 'is_active' in body else 0, 
+               body['requirements'] if 'requirements' in body else None,
                body['created_at'] if 'created_at' in body else datetime.now())
     
     create_job(raw)
@@ -223,9 +232,11 @@ def delete_contact_route(contact_id):
 def edit_job_page(job_id):
     if request.method == "GET":
         job_details = get_one_job(job_id)
-        return render_template("job_form.html", job=job_details)
+        return render_template("job_form.html", job=job_details, companies=show_all_companies())
     
     body = normalize(dict(request.form))
+    
+    print(body)
     
     raw = (body['company_id'] if 'company_id' in body else None, 
            body['job_title'] if 'job_title' in body else None, 
@@ -236,6 +247,7 @@ def edit_job_page(job_id):
            body['posting_url'] if 'posting_url' in body else None, 
            body['date_posted'] if 'date_posted' in body else None, 
            body['is_active'] if 'is_active' in body else 0, 
+           body['requirements'] if 'requirements' in body else None,
            job_id)
     
     update_job(raw)

@@ -80,7 +80,7 @@
             <p>No skills entered yet.</p>
         {% endif %}
 
-        <form method="get" action="{{ url_for('test_func') }}">
+        <form method="get" action="{{ url_for('job_match') }}">
             <label for="skills">Update your skills (comma-separated)</label><br>
             <input type="text" id="skills" name="skills" size="60"
                    placeholder="e.g. Python, SQL, HTML" value="{{ my_skills | join(', ') }}">
