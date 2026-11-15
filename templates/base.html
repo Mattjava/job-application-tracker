@@ -4,38 +4,78 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Home{% endblock %} | Job Application Tracker</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    {# Bootstrap CSS comes from Bootstrap-Flask (set up in app.py); our mint theme loads after it. #}
+    {{ bootstrap.load_css() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <header>
-        <p><strong>Job Application Tracker</strong></p>
-        <nav>
-            <ul>
-                <li><a href="{{ url_for('home_page') }}">Dashboard</a></li>
-                <li><a href="{{ url_for('app_page') }}">Applications</a></li>
-                <li><a href="{{ url_for('job_page') }}">Jobs</a></li>
-                <li><a href="{{ url_for('company_page') }}">Companies</a></li>
-                <li><a href="{{ url_for('contact_page') }}">Contacts</a></li>
-                <li><a href="{{ url_for('job_match') }}">Job Match</a></li>
-            </ul>
-        </nav>
-        <hr>
-    </header>
+    {# (path prefix, endpoint, label). A link is "active" when the current URL starts with its prefix,
+       so add/edit pages highlight their section too. #}
+    {% set nav_items = [
+        ("/apps",      "app_page",     "Applications"),
+        ("/jobs",      "job_page",     "Jobs"),
+        ("/company",   "company_page", "Companies"),
+        ("/contacts",  "contact_page", "Contacts"),
+        ("/job-match", "job_match",    "Job Match")
+    ] %}
 
-    {# Shows any messages the backend sends with flask.flash(), e.g. "Application saved." #}
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <section aria-label="Messages">
-                <ul>
-                    {% for message in messages %}
-                        <li>{{ message }}</li>
+    <nav class="navbar navbar-expand-lg app-navbar sticky-top">
+        <div class="container-xxl">
+            <a class="navbar-brand" href="{{ url_for('home_page') }}">
+                <span class="brand-mark" aria-hidden="true">JT</span>
+                Job Application Tracker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
+                    aria-controls="main-nav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="main-nav">
+                <ul class="navbar-nav ms-auto gap-lg-1">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.path == '/' }}"
+                           {{ 'aria-current=page' if request.path == '/' }}
+                           href="{{ url_for('home_page') }}">Dashboard</a>
+                    </li>
+                    {% for prefix, endpoint, label in nav_items %}
+                        {% set is_active = request.path.startswith(prefix) %}
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if is_active }}"
+                               {{ 'aria-current=page' if is_active }}
+                               href="{{ url_for(endpoint) }}">{{ label }}</a>
+                        </li>
                     {% endfor %}
                 </ul>
-            </section>
-        {% endif %}
-    {% endwith %}
+            </div>
+        </div>
+    </nav>
 
-    <main>
+    <main class="container-xxl py-4 py-lg-5">
+        {# Shows any messages the backend sends with flask.flash(), e.g. "Application saved." #}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <section aria-label="Messages" class="mb-4">
+                    {% for message in messages %}
+                        <div class="alert alert-mint alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
+
+    <footer class="app-footer py-4">
+        <div class="container-xxl">Job Application Tracker</div>
+    </footer>
+
+    {{ bootstrap.load_js() }}
 </body>
 </html>

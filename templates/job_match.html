@@ -10,43 +10,59 @@
     (the route currently uses a hard-coded list, so it would need to read request.args to use this).
 #}
 {% extends "base.html" %}
+{% import "macros.html" as m %}
 
 {% block title %}Job Match{% endblock %}
 
-{% macro match_table(jobs, ranked) %}
-    <table border="1">
-        <thead>
-            <tr>
-                <th scope="col">Rank</th>
-                <th scope="col">Job</th>
-                <th scope="col">Match</th>
-                <th scope="col">Skills you have</th>
-                <th scope="col">Missing skills</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for job in jobs %}
+{% macro match_table(jobs, ranked, bar_class) %}
+    <div class="table-responsive">
+        <table class="table table-mint table-hover">
+            <thead>
                 <tr>
-                    <td>#{{ ranked.index(job) + 1 }}</td>
-                    <td>{{ job.title }}</td>
-                    <td>
-                        <meter min="0" max="100" low="50" high="99" optimum="100" value="{{ job.percent }}">{{ job.percent }}%</meter>
-                        {{ job.percent }}%
-                    </td>
-                    <td>{{ job.matches }} of {{ job.total }}</td>
-                    <td>
-                        {% if job.missing %}
-                            <ul>
-                                {% for skill in job.missing %}<li>{{ skill }}</li>{% endfor %}
-                            </ul>
-                        {% else %}
-                            None, you meet every requirement.
-                        {% endif %}
-                    </td>
+                    <th scope="col" class="col-id">Rank</th>
+                    <th scope="col">Job</th>
+                    <th scope="col" style="min-width: 11rem">Match</th>
+                    <th scope="col" class="col-num">Skills you have</th>
+                    <th scope="col">Missing skills</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                    <tr>
+                        <td class="col-id">#{{ ranked.index(job) + 1 }}</td>
+                        <td class="col-title"><span class="cell-primary">{{ job.title }}</span></td>
+                        <td>{{ m.meter(job.percent, bar_class) }}</td>
+                        <td class="col-num">{{ job.matches }} of {{ job.total }}</td>
+                        <td class="col-skills">
+                            {% if job.missing %}
+                                {{ m.chips(job.missing, missing=True) }}
+                            {% else %}
+                                <span class="flag flag-yes">None, you meet every requirement</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}
+
+{# One tier of results (Ready / Close / Stretch) as a panel. #}
+{% macro tier_panel(title, subtitle, jobs, ranked, bar_class, empty_text) %}
+    <section class="panel mb-4">
+        <div class="panel-header">
+            <div>
+                <h2>{{ title }}</h2>
+                <div class="count">{{ subtitle }}</div>
+            </div>
+            <span class="count">{{ jobs | length }} job{{ "" if jobs | length == 1 else "s" }}</span>
+        </div>
+        {% if jobs %}
+            {{ match_table(jobs, ranked, bar_class) }}
+        {% else %}
+            <div class="panel-body text-body-secondary">{{ empty_text }}</div>
+        {% endif %}
+    </section>
 {% endmacro %}
 
 {% block content %}
@@ -67,113 +83,141 @@
         {% endfor %}
     {% endfor %}
 
-    <h1>Job Match</h1>
-    <p>How your skills line up with the required skills listed on each job you're tracking.</p>
+    <div class="page-header">
+        <div>
+            <h1>Job Match</h1>
+            <p>How your skills line up with the required skills listed on each job you're tracking.</p>
+        </div>
+    </div>
 
-    <section>
-        <h2>Your skills</h2>
-        {% if my_skills %}
-            <ul>
-                {% for skill in my_skills %}<li>{{ skill }}</li>{% endfor %}
-            </ul>
-        {% else %}
-            <p>No skills entered yet.</p>
-        {% endif %}
+    {# ---- Skills input ---- #}
+    <section class="panel mb-4" aria-labelledby="skills-title">
+        <div class="panel-header"><h2 id="skills-title">Your skills</h2></div>
+        <div class="panel-body">
+            {% if my_skills %}
+                <div class="mb-3">{{ m.chips(my_skills) }}</div>
+            {% else %}
+                <p class="text-body-secondary">No skills entered yet.</p>
+            {% endif %}
 
-        <form method="get" action="{{ url_for('job_match') }}">
-            <label for="skills">Update your skills (comma-separated)</label><br>
-            <input type="text" id="skills" name="skills" size="60"
-                   placeholder="e.g. Python, SQL, HTML" value="{{ my_skills | join(', ') }}">
-            <button type="submit">Re-run match</button>
-        </form>
+            <form method="get" action="{{ url_for('job_match') }}">
+                <label for="skills" class="form-label">Update your skills (comma-separated)</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="skills" name="skills"
+                           placeholder="e.g. Python, SQL, HTML" value="{{ my_skills | join(', ') }}">
+                    <button type="submit" class="btn btn-primary">Re-run match</button>
+                </div>
+            </form>
+        </div>
     </section>
 
     {% if not results %}
-        <section>
-            <h2>No jobs to compare</h2>
-            <p>
-                None of your jobs list any required skills yet.
-                <a href="{{ url_for('job_page') }}">Add required skills to a job</a> to see how you match.
-            </p>
+        <section class="panel">
+            <div class="panel-body">
+                <h2 class="section-title">No jobs to compare</h2>
+                <p class="text-body-secondary mb-0">
+                    None of your jobs list any required skills yet.
+                    <a href="{{ url_for('job_page') }}">Add required skills to a job</a> to see how you match.
+                </p>
+            </div>
         </section>
     {% else %}
-        <section>
-            <h2>Summary</h2>
-            <dl>
-                <dt>Jobs compared</dt>
-                <dd>{{ results | length }}</dd>
-
-                <dt>Ready to apply (100% match)</dt>
-                <dd>{{ full_matches | length }}</dd>
-
-                <dt>Close (50–99% match)</dt>
-                <dd>{{ close_matches | length }}</dd>
-
-                <dt>Stretch (under 50% match)</dt>
-                <dd>{{ stretch_matches | length }}</dd>
-
-                <dt>Average match</dt>
-                <dd>
-                    <meter min="0" max="100" low="50" high="99" optimum="100" value="{{ average }}">{{ average }}%</meter>
-                    {{ average }}%
-                </dd>
-            </dl>
+        {# ---- Summary ---- #}
+        <section aria-labelledby="summary-title" class="mb-4">
+            <h2 id="summary-title" class="visually-hidden">Summary</h2>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
+                {% for label, value, accent in [
+                    ("Jobs compared",      results | length,         "accent-neutral"),
+                    ("Ready to apply",     full_matches | length,    "accent-strong"),
+                    ("Close (50–99%)",     close_matches | length,   ""),
+                    ("Stretch (under 50%)", stretch_matches | length, "accent-warm")
+                ] %}
+                    <div class="col">
+                        <div class="stat-card {{ accent }}">
+                            <div class="stat-label">{{ label }}</div>
+                            <div class="stat-value">{{ value }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <div class="col">
+                    <div class="stat-card accent-strong">
+                        <div class="stat-label">Average match</div>
+                        <div class="stat-value mb-2">{{ average }}%</div>
+                        <div class="progress progress-thin" role="progressbar" aria-label="Average match"
+                             aria-valuenow="{{ average }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: {{ average }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
-        <section>
-            <h2>Best match</h2>
-            {% set best = results[0] %}
-            <p>
-                <strong>{{ best.title }}</strong>, {{ best.percent }}% match
-                ({{ best.matches }} of {{ best.total }} required skills).
-                {% if best.missing %}
-                    You're missing: {{ best.missing | join(", ") }}.
-                {% else %}
-                    You meet every requirement.
-                {% endif %}
-            </p>
+        {# ---- Best match ---- #}
+        {% set best = results[0] %}
+        <section class="panel best-match mb-4" aria-labelledby="best-title">
+            <div class="panel-body d-flex flex-wrap align-items-center gap-4">
+                <div class="big-percent">{{ best.percent }}%</div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="stat-label mb-1" id="best-title">Best match</div>
+                    <div class="fs-5 fw-semibold text-break" style="color: var(--mint-900)">{{ best.title }}</div>
+                    <div class="text-body-secondary small mb-2">{{ best.matches }} of {{ best.total }} required skills</div>
+                    {% if best.missing %}
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <span class="small text-body-secondary">You're missing:</span>
+                            {{ m.chips(best.missing, missing=True) }}
+                        </div>
+                    {% else %}
+                        <span class="flag flag-yes">You meet every requirement</span>
+                    {% endif %}
+                </div>
+            </div>
         </section>
 
-        <section>
-            <h2>Ready to apply</h2>
-            <p>You have every skill these jobs ask for.</p>
-            {% if full_matches %}{{ match_table(full_matches, results) }}{% else %}<p>No jobs in this group yet.</p>{% endif %}
-        </section>
+        {# ---- Tiers ---- #}
+        {{ tier_panel("Ready to apply", "You have every skill these jobs ask for.",
+                      full_matches, results, "bar-full", "No jobs in this group yet.") }}
+        {{ tier_panel("Close matches", "You have at least half of the required skills.",
+                      close_matches, results, "bar-close", "No jobs in this group.") }}
+        {{ tier_panel("Stretch jobs", "You have less than half of the required skills.",
+                      stretch_matches, results, "bar-stretch", "No jobs in this group.") }}
 
-        <section>
-            <h2>Close matches</h2>
-            <p>You have at least half of the required skills.</p>
-            {% if close_matches %}{{ match_table(close_matches, results) }}{% else %}<p>No jobs in this group.</p>{% endif %}
-        </section>
-
-        <section>
-            <h2>Stretch jobs</h2>
-            <p>You have less than half of the required skills.</p>
-            {% if stretch_matches %}{{ match_table(stretch_matches, results) }}{% else %}<p>No jobs in this group.</p>{% endif %}
-        </section>
-
-        <section>
-            <h2>Skills to learn next</h2>
+        {# ---- Skills to learn ---- #}
+        <section class="panel" aria-labelledby="learn-title">
+            <div class="panel-header">
+                <div>
+                    <h2 id="learn-title">Skills to learn next</h2>
+                    {% if missing_counts %}<div class="count">Skills you're missing, ordered by how many jobs ask for them.</div>{% endif %}
+                </div>
+            </div>
             {% if missing_counts %}
-                <p>Skills you're missing, ordered by how many jobs ask for them.</p>
-                <table border="1">
-                    <thead>
-                        <tr>
-                            <th scope="col">Skill</th>
-                            <th scope="col">Jobs that require it</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for skill, count in missing_counts | dictsort(by="value", reverse=true) %}
+                {% set max_count = missing_counts.values() | max %}
+                <div class="table-responsive">
+                    <table class="table table-mint table-hover">
+                        <thead>
                             <tr>
-                                <td>{{ skill }}</td>
-                                <td>{{ count }}</td>
+                                <th scope="col">Skill</th>
+                                <th scope="col" class="col-num">Jobs that require it</th>
+                                <th scope="col" style="width: 40%"><span class="visually-hidden">Demand</span></th>
                             </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody>
+                            {% for skill, count in missing_counts | dictsort(by="value", reverse=true) %}
+                                <tr>
+                                    <td class="fw-semibold">{{ skill }}</td>
+                                    <td class="col-num">{{ count }}</td>
+                                    <td>
+                                        <div class="progress progress-thin" role="progressbar" aria-label="{{ skill }} demand"
+                                             aria-valuenow="{{ count }}" aria-valuemin="0" aria-valuemax="{{ max_count }}">
+                                            <div class="progress-bar bar-stretch" style="width: {{ (count / max_count * 100) | round | int }}%"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             {% else %}
-                <p>Nothing. You cover every skill listed across your jobs.</p>
+                <div class="panel-body text-body-secondary">Nothing. You cover every skill listed across your jobs.</div>
             {% endif %}
         </section>
     {% endif %}

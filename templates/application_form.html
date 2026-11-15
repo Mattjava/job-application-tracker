@@ -26,89 +26,99 @@
     {% set company_lookup = {} %}
     {% for company in companies | default([]) %}{% set _ = company_lookup.update({company.company_id: company.company_name}) %}{% endfor %}
 
-    <h1>{{ "Edit application #" ~ app.application_id if editing else "Add application" }}</h1>
+    <div class="page-header">
+        <div>
+            <h1>{{ "Edit application #" ~ app.application_id if editing else "Add application" }}</h1>
+            <p>Fields marked <span class="required">*</span> are required.</p>
+        </div>
+    </div>
 
-    <form method="post" action="{{ url_for('edit_application_page', app_id=app.application_id) if editing else url_for('add_app') }}">
-        <fieldset>
+    <form method="post" class="panel form-panel"
+          action="{{ url_for('edit_application_page', app_id=app.application_id) if editing else url_for('add_app') }}">
+        <fieldset class="form-section">
             <legend>Job</legend>
 
-            <p>
-                <label for="job_id">Job *</label><br>
-                <select id="job_id" name="job_id" required>
-                    <option value="">Select a job…</option>
-                    {% for job in jobs | default([]) | sort(attribute="job_title") %}
-                        <option value="{{ job.job_id }}" {{ "selected" if app.job_id == job.job_id }}>
-                            {{ job.job_title }} at {{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}
-                        </option>
-                    {% endfor %}
-                </select>
-                <br><small>Don't see it? <a href="{{ url_for('add_job') }}">Add the job first.</a></small>
-            </p>
+            <label for="job_id" class="form-label">Job <span class="required">*</span></label>
+            <select id="job_id" name="job_id" class="form-select" required>
+                <option value="">Select a job…</option>
+                {% for job in jobs | default([]) | sort(attribute="job_title") %}
+                    <option value="{{ job.job_id }}" {{ "selected" if app.job_id == job.job_id }}>
+                        {{ job.job_title }} at {{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}
+                    </option>
+                {% endfor %}
+            </select>
+            <div class="form-text">Don't see it? <a href="{{ url_for('add_job') }}">Add the job first.</a></div>
         </fieldset>
 
-        <fieldset>
+        <fieldset class="form-section">
             <legend>Application</legend>
 
-            <p>
-                <label for="application_date">Date applied *</label><br>
-                <input type="date" id="application_date" name="application_date" required
-                       value="{{ app.application_date or '' }}">
-            </p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="application_date" class="form-label">Date applied <span class="required">*</span></label>
+                    <input type="date" id="application_date" name="application_date" class="form-control" required
+                           value="{{ app.application_date or '' }}">
+                </div>
 
-            <p>
-                <label for="status">Status</label><br>
-                <select id="status" name="status">
-                    {% for group, statuses in m.STATUS_GROUPS.items() %}
-                        <optgroup label="{{ group }}">
-                            {% for status in statuses %}
-                                <option value="{{ status }}" {{ "selected" if (app.status or "Applied") == status }}>{{ status }}</option>
-                            {% endfor %}
-                        </optgroup>
-                    {% endfor %}
-                    {# Keep any older status that isn't in the list above so editing doesn't silently change it. #}
-                    {% if app.status and app.status not in m.STATUSES %}
-                        <option value="{{ app.status }}" selected>{{ app.status }}</option>
-                    {% endif %}
-                </select>
-            </p>
+                <div class="col-md-6">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        {% for group, statuses in m.STATUS_GROUPS.items() %}
+                            <optgroup label="{{ group }}">
+                                {% for status in statuses %}
+                                    <option value="{{ status }}" {{ "selected" if (app.status or "Applied") == status }}>{{ status }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endfor %}
+                        {# Keep any older status that isn't in the list above so editing doesn't silently change it. #}
+                        {% if app.status and app.status not in m.STATUSES %}
+                            <option value="{{ app.status }}" selected>{{ app.status }}</option>
+                        {% endif %}
+                    </select>
+                </div>
 
-            <p>
-                <label for="resume_version">Resume version</label><br>
-                <input type="text" id="resume_version" name="resume_version" maxlength="50"
-                       placeholder="e.g. v2.1" value="{{ app.resume_version or '' }}">
-            </p>
+                <div class="col-md-6">
+                    <label for="resume_version" class="form-label">Resume version</label>
+                    <input type="text" id="resume_version" name="resume_version" class="form-control" maxlength="50"
+                           placeholder="e.g. v2.1" value="{{ app.resume_version or '' }}">
+                </div>
 
-            <p>
-                <input type="checkbox" id="cover_letter_sent" name="cover_letter_sent" value="1"
-                       {{ "checked" if app.cover_letter_sent }}>
-                <label for="cover_letter_sent">Cover letter sent</label>
-            </p>
+                <div class="col-md-6 d-flex align-items-end">
+                    <div class="form-check mb-2">
+                        <input type="checkbox" id="cover_letter_sent" name="cover_letter_sent" value="1" class="form-check-input"
+                               {{ "checked" if app.cover_letter_sent }}>
+                        <label for="cover_letter_sent" class="form-check-label">Cover letter sent</label>
+                    </div>
+                </div>
+            </div>
         </fieldset>
 
-        <fieldset>
+        <fieldset class="form-section">
             <legend>Follow-up</legend>
 
-            <p>
-                <label for="response_date">Response date</label><br>
-                <input type="date" id="response_date" name="response_date"
-                       value="{{ app.response_date or '' }}">
-            </p>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="response_date" class="form-label">Response date</label>
+                    <input type="date" id="response_date" name="response_date" class="form-control"
+                           value="{{ app.response_date or '' }}">
+                </div>
 
-            <p>
-                <label for="interview_date">Interview date &amp; time</label><br>
-                <input type="datetime-local" id="interview_date" name="interview_date"
-                       value="{{ app.interview_date.strftime('%Y-%m-%dT%H:%M') if app.interview_date else '' }}">
-            </p>
+                <div class="col-md-6">
+                    <label for="interview_date" class="form-label">Interview date &amp; time</label>
+                    <input type="datetime-local" id="interview_date" name="interview_date" class="form-control"
+                           value="{{ app.interview_date.strftime('%Y-%m-%dT%H:%M') if app.interview_date else '' }}">
+                </div>
 
-            <p>
-                <label for="notes">Notes</label><br>
-                <textarea id="notes" name="notes" rows="5" cols="60">{{ app.notes or '' }}</textarea>
-            </p>
+                <div class="col-12">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" rows="5">{{ app.notes or '' }}</textarea>
+                </div>
+            </div>
         </fieldset>
 
-        <p>
-            <button type="submit">{{ "Save changes" if editing else "Add application" }}</button>
-            <a href="{{ url_for('app_page') }}">Cancel</a>
-        </p>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary px-4">{{ "Save changes" if editing else "Add application" }}</button>
+            <a href="{{ url_for('app_page') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
     </form>
 {% endblock %}

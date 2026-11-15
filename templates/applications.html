@@ -25,60 +25,73 @@
 
     {% set apps = applications | default([]) %}
 
-    <h1>Applications</h1>
-    <p>Every job you have applied to and where it stands.</p>
+    <div class="page-header">
+        <div>
+            <h1>Applications</h1>
+            <p>Every job you have applied to and where it stands.</p>
+        </div>
+        <a class="btn btn-primary" href="{{ url_for('add_app') }}">+ Add application</a>
+    </div>
 
-    <p><a href="{{ url_for('add_app') }}">+ Add application</a></p>
-
-    <p>{{ apps | length }} application{{ "" if apps | length == 1 else "s" }}</p>
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Job</th>
-                <th scope="col">Company</th>
-                <th scope="col">Date applied</th>
-                <th scope="col">Status</th>
-                <th scope="col">Resume version</th>
-                <th scope="col">Cover letter</th>
-                <th scope="col">Response date</th>
-                <th scope="col">Interview date</th>
-                <th scope="col">Notes</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for app in apps | sort(attribute="application_date", reverse=true) %}
-                {% set job = job_lookup.get(app.job_id) %}
-                <tr>
-                    <td>{{ app.application_id }}</td>
-                    <td>{{ job.job_title if job else "Job #" ~ app.job_id }}</td>
-                    <td>{{ m.show(company_lookup.get(job.company_id, "Company #" ~ job.company_id)) if job else "—" }}</td>
-                    <td>{{ m.show(app.application_date) }}</td>
-                    <td>{{ m.show(app.status) }}</td>
-                    <td>{{ m.show(app.resume_version) }}</td>
-                    <td>{{ m.yes_no(app.cover_letter_sent) }}</td>
-                    <td>{{ m.show(app.response_date) }}</td>
-                    <td>{{ app.interview_date.strftime("%Y-%m-%d %H:%M") if app.interview_date else "—" }}</td>
-                    <td>
-                        {% if app.notes %}
-                            <details>
-                                <summary>View</summary>
-                                {{ app.notes }}
-                            </details>
-                        {% else %}—{% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('edit_application_page', app_id=app.application_id) }}">Edit</a>
-                        {{ m.delete_button(url_for("delete_app_route", app_id=app.application_id), "this application") }}
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="11">No applications yet. <a href="{{ url_for('add_app') }}">Add your first one.</a></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="panel">
+        <div class="panel-header">
+            <h2>All applications</h2>
+            <span class="count">{{ apps | length }} application{{ "" if apps | length == 1 else "s" }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-mint table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" class="col-id">ID</th>
+                        <th scope="col">Job</th>
+                        <th scope="col">Date applied</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Resume</th>
+                        <th scope="col">Cover letter</th>
+                        <th scope="col">Response date</th>
+                        <th scope="col">Interview</th>
+                        <th scope="col">Notes</th>
+                        <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for app in apps | sort(attribute="application_date", reverse=true) %}
+                        {% set job = job_lookup.get(app.job_id) %}
+                        <tr>
+                            <td class="col-id">#{{ app.application_id }}</td>
+                            <td class="col-title">
+                                <span class="cell-primary">{{ job.job_title if job else "Job #" ~ app.job_id }}</span>
+                                {% if job %}
+                                    <span class="cell-secondary">{{ company_lookup.get(job.company_id, "Company #" ~ job.company_id) }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="col-nowrap">{{ m.show(app.application_date) }}</td>
+                            <td class="col-nowrap">{{ m.status_badge(app.status) }}</td>
+                            <td class="col-nowrap">{{ m.show(app.resume_version) }}</td>
+                            <td class="col-nowrap">{{ m.yes_no_badge(app.cover_letter_sent) }}</td>
+                            <td class="col-nowrap">{{ m.show(app.response_date) }}</td>
+                            <td class="col-nowrap">
+                                {% if app.interview_date %}
+                                    {{ app.interview_date.strftime("%Y-%m-%d") }}
+                                    <span class="cell-secondary">{{ app.interview_date.strftime("%I:%M %p") }}</span>
+                                {% else %}<span class="muted-dash">—</span>{% endif %}
+                            </td>
+                            <td>{{ m.details_cell(app.notes) }}</td>
+                            <td class="col-actions">
+                                {{ m.row_actions(url_for('edit_application_page', app_id=app.application_id),
+                                                 url_for("delete_app_route", app_id=app.application_id),
+                                                 "this application") }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="table-empty">
+                                No applications yet. <a href="{{ url_for('add_app') }}">Add your first one.</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

@@ -18,61 +18,68 @@
 
 {% block content %}
     {% set all_companies = companies | default([]) %}
+    {% set column_count = 6 + (1 if jobs is defined else 0) + (1 if contacts is defined else 0) %}
 
-    <h1>Companies</h1>
-    <p>Companies you are interested in or have applied to.</p>
+    <div class="page-header">
+        <div>
+            <h1>Companies</h1>
+            <p>Companies you are interested in or have applied to.</p>
+        </div>
+        <a class="btn btn-primary" href="{{ url_for('add_company') }}">+ Add company</a>
+    </div>
 
-    <p><a href="{{ url_for('add_company') }}">+ Add company</a></p>
-
-    <p>{{ all_companies | length }} compan{{ "y" if all_companies | length == 1 else "ies" }}</p>
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <th scope="col">Industry</th>
-                <th scope="col">Location</th>
-                <th scope="col">Website</th>
-                {% if jobs is defined %}<th scope="col">Jobs</th>{% endif %}
-                {% if contacts is defined %}<th scope="col">Contacts</th>{% endif %}
-                <th scope="col">Notes</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for company in all_companies | sort(attribute="company_name") %}
-                <tr>
-                    <td>{{ company.company_id }}</td>
-                    <td>{{ company.company_name }}</td>
-                    <td>{{ m.show(company.industry) }}</td>
-                    <td>{{ m.show([company.city, company.state] | select | join(", ")) }}</td>
-                    <td>{{ m.external_link(company.website) }}</td>
-                    {% if jobs is defined %}
-                        <td>{{ jobs | selectattr("company_id", "equalto", company.company_id) | list | length }}</td>
-                    {% endif %}
-                    {% if contacts is defined %}
-                        <td>{{ contacts | selectattr("company_id", "equalto", company.company_id) | list | length }}</td>
-                    {% endif %}
-                    <td>
-                        {% if company.notes %}
-                            <details>
-                                <summary>View</summary>
-                                {{ company.notes }}
-                            </details>
-                        {% else %}—{% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('edit_company_page', company_id=company.company_id) }}">Edit</a>
-                        {{ m.delete_button(url_for("delete_company_route", company_id=company.company_id), company.company_name,
-                                           " Companies that still have jobs or contacts cannot be deleted until those are removed.") }}
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="9">No companies yet. <a href="{{ url_for('add_company') }}">Add your first one.</a></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="panel">
+        <div class="panel-header">
+            <h2>All companies</h2>
+            <span class="count">{{ all_companies | length }} compan{{ "y" if all_companies | length == 1 else "ies" }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-mint table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" class="col-id">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">Website</th>
+                        {% if jobs is defined %}<th scope="col" class="col-num">Jobs</th>{% endif %}
+                        {% if contacts is defined %}<th scope="col" class="col-num">Contacts</th>{% endif %}
+                        <th scope="col">Notes</th>
+                        <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for company in all_companies | sort(attribute="company_name") %}
+                        <tr>
+                            <td class="col-id">#{{ company.company_id }}</td>
+                            <td class="col-title">
+                                <span class="cell-primary">{{ company.company_name }}</span>
+                                {% if company.industry %}<span class="cell-secondary">{{ company.industry }}</span>{% endif %}
+                            </td>
+                            <td class="col-medium">{{ m.show([company.city, company.state] | select | join(", ")) }}</td>
+                            <td class="col-medium text-break">{{ m.external_link(company.website) }}</td>
+                            {% if jobs is defined %}
+                                <td class="col-num">{{ jobs | selectattr("company_id", "equalto", company.company_id) | list | length }}</td>
+                            {% endif %}
+                            {% if contacts is defined %}
+                                <td class="col-num">{{ contacts | selectattr("company_id", "equalto", company.company_id) | list | length }}</td>
+                            {% endif %}
+                            <td>{{ m.details_cell(company.notes) }}</td>
+                            <td class="col-actions">
+                                {{ m.row_actions(url_for('edit_company_page', company_id=company.company_id),
+                                                 url_for("delete_company_route", company_id=company.company_id),
+                                                 company.company_name,
+                                                 " Companies that still have jobs or contacts cannot be deleted until those are removed.") }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="{{ column_count }}" class="table-empty">
+                                No companies yet. <a href="{{ url_for('add_company') }}">Add your first one.</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

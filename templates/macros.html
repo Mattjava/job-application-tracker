@@ -18,9 +18,9 @@
 {% set JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Temporary"] %}
 
 
-{# Prints the value, or a dash when it is empty. #}
+{# Prints the value, or a (faded) dash when it is empty. #}
 {% macro show(value) -%}
-    {%- if value is none or value == "" -%}—{%- else -%}{{ value }}{%- endif -%}
+    {%- if value is none or value == "" -%}<span class="muted-dash">—</span>{%- else -%}{{ value }}{%- endif -%}
 {%- endmacro %}
 
 
@@ -32,7 +32,7 @@
 
 {# Formats a salary like 75000.00 as $75,000. #}
 {% macro money(value) -%}
-    {%- if value is none -%}—{%- else -%}${{ "{:,.0f}".format(value) }}{%- endif -%}
+    {%- if value is none -%}<span class="muted-dash">—</span>{%- else -%}${{ "{:,.0f}".format(value) }}{%- endif -%}
 {%- endmacro %}
 
 
@@ -41,7 +41,7 @@
     {%- if url -%}
         {%- set href = url if url.startswith("http://") or url.startswith("https://") else "https://" ~ url -%}
         <a href="{{ href }}" target="_blank" rel="noopener noreferrer">{{ text or url }}</a>
-    {%- else -%}—{%- endif -%}
+    {%- else -%}<span class="muted-dash">—</span>{%- endif -%}
 {%- endmacro %}
 
 
@@ -54,8 +54,72 @@
 {# Small POST form with a confirmation prompt, used for every Delete button. #}
 {% macro delete_button(action, what, extra_warning="") -%}
     {%- set message = "Delete " ~ what ~ "? This cannot be undone." ~ extra_warning -%}
-    <form method="post" action="{{ action }}"
+    <form method="post" action="{{ action }}" class="d-inline"
           onsubmit='return confirm({{ message | tojson }});'>
-        <button type="submit">Delete</button>
+        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
     </form>
+{%- endmacro %}
+
+
+{# Edit link + Delete button, laid out side by side for the Actions column of a table. #}
+{% macro row_actions(edit_url, delete_url, what, extra_warning="") -%}
+    <div class="row-actions">
+        <a class="btn btn-sm btn-outline-primary" href="{{ edit_url }}">Edit</a>
+        {{ delete_button(delete_url, what, extra_warning) }}
+    </div>
+{%- endmacro %}
+
+
+{# Coloured pill for an application status. The colour comes from its group in STATUS_GROUPS. #}
+{% macro status_badge(status) -%}
+    {%- if status is none or status == "" -%}<span class="muted-dash">—</span>
+    {%- else -%}
+        {%- set ns = namespace(group="other") -%}
+        {%- for group, statuses in STATUS_GROUPS.items() if status in statuses -%}{%- set ns.group = group | lower -%}{%- endfor -%}
+        <span class="status-badge status-{{ ns.group }}">{{ status }}</span>
+    {%- endif -%}
+{%- endmacro %}
+
+
+{# Yes/No as a small pill, for tinyint(1) columns shown in tables. #}
+{% macro yes_no_badge(value) -%}
+    {%- if value -%}<span class="flag flag-yes">Yes</span>{%- else -%}<span class="flag flag-no">No</span>{%- endif -%}
+{%- endmacro %}
+
+
+{# A wrapping row of skill chips. `skills` is a list of strings; `missing=True` uses the amber style. #}
+{% macro chips(skills, missing=False) -%}
+    <div class="chip-list">
+        {%- for skill in skills -%}<span class="chip{{ ' chip-missing' if missing }}">{{ skill }}</span>{%- endfor -%}
+    </div>
+{%- endmacro %}
+
+
+{# The JSON requirements string from the jobs table as chips, or a dash when there are none. #}
+{% macro requirement_chips(raw) -%}
+    {%- set skills = requirements_text(raw).split(",") | map("trim") | select | list -%}
+    {%- if skills -%}{{ chips(skills) }}{%- else -%}<span class="muted-dash">—</span>{%- endif -%}
+{%- endmacro %}
+
+
+{# Click-to-expand block for long text (notes, descriptions) inside a table cell. #}
+{% macro details_cell(text, label="View") -%}
+    {%- if text -%}
+        <details class="cell-details">
+            <summary>{{ label }}</summary>
+            <div class="cell-details-body">{{ text }}</div>
+        </details>
+    {%- else -%}<span class="muted-dash">—</span>{%- endif -%}
+{%- endmacro %}
+
+
+{# Thin progress bar with a percentage label on the right. #}
+{% macro meter(percent, bar_class="") -%}
+    <div class="meter">
+        <div class="progress progress-thin" role="progressbar" aria-label="{{ percent }}%"
+             aria-valuenow="{{ percent }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar {{ bar_class }}" style="width: {{ percent }}%"></div>
+        </div>
+        <span class="meter-value">{{ percent }}%</span>
+    </div>
 {%- endmacro %}

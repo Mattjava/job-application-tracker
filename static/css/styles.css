@@ -1,0 +1,703 @@
+/*
+    Mint & white theme for the Job Application Tracker.
+    Loaded after Bootstrap (see base.html), so everything here layers on top of it.
+
+    Sections:
+      1. Palette + Bootstrap variable overrides
+      2. Base / layout
+      3. Navbar
+      4. Buttons, forms, alerts, progress
+      5. Cards + page header
+      6. Tables
+      7. Badges + chips
+      8. Dashboard / Job Match pieces
+*/
+
+/* ------------------------------------------------------------------ */
+/* 1. Palette + Bootstrap variable overrides                           */
+/* ------------------------------------------------------------------ */
+:root {
+    --mint-25:  #f7fcfa;
+    --mint-50:  #eef9f4;
+    --mint-100: #dcf3e8;
+    --mint-200: #bfe8d4;
+    --mint-300: #93d7b8;
+    --mint-400: #5ec399;
+    --mint-500: #36a97c;
+    --mint-600: #238f69;
+    --mint-700: #1b7556;   /* main brand color: white text on it passes WCAG AA */
+    --mint-800: #165c45;
+    --mint-900: #0f3d2e;
+
+    --ink:        #1d2b25;
+    --ink-muted:  #5d6f67;
+    --line:       #e1eee7;
+    --line-strong:#cfe4d9;
+
+    --bs-body-font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --bs-body-bg: #fff;            /* inputs, list rows, dropdowns stay white; the page tint is set on <body> */
+    --bs-body-color: var(--ink);
+    --bs-secondary-color: var(--ink-muted);
+    --bs-heading-color: var(--mint-900);
+    --bs-border-color: var(--line);
+    --bs-border-radius: .6rem;
+    --bs-border-radius-lg: .85rem;
+
+    --bs-primary: var(--mint-700);
+    --bs-primary-rgb: 27, 117, 86;
+    --bs-link-color: var(--mint-700);
+    --bs-link-color-rgb: 27, 117, 86;
+    --bs-link-hover-color: var(--mint-900);
+    --bs-link-hover-color-rgb: 15, 61, 46;
+    --bs-focus-ring-color: rgba(54, 169, 124, .25);
+
+    --shadow-sm: 0 1px 2px rgba(15, 61, 46, .05), 0 1px 3px rgba(15, 61, 46, .04);
+    --shadow-md: 0 4px 14px rgba(15, 61, 46, .07);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2. Base / layout                                                    */
+/* ------------------------------------------------------------------ */
+body {
+    background-color: var(--mint-25);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+}
+
+main { flex: 1 0 auto; }
+
+h1, h2, h3, h4 { letter-spacing: -.01em; font-weight: 650; }
+
+a { text-underline-offset: .2em; }
+
+.section-title {
+    font-size: 1.05rem;
+    font-weight: 650;
+    color: var(--mint-900);
+    margin-bottom: .25rem;
+}
+
+.section-subtitle {
+    color: var(--ink-muted);
+    font-size: .9rem;
+    margin-bottom: 1rem;
+}
+
+.app-footer {
+    border-top: 1px solid var(--line);
+    color: var(--ink-muted);
+    font-size: .825rem;
+}
+
+/* ------------------------------------------------------------------ */
+/* 3. Navbar                                                           */
+/* ------------------------------------------------------------------ */
+.app-navbar {
+    background-color: #fff;
+    border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-sm);
+    padding-top: .65rem;
+    padding-bottom: .65rem;
+}
+
+.app-navbar .navbar-brand {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--mint-900);
+}
+
+.brand-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .55rem;
+    background: linear-gradient(135deg, var(--mint-400), var(--mint-700));
+    color: #fff;
+    font-size: .8rem;
+    font-weight: 700;
+    letter-spacing: .02em;
+}
+
+.app-navbar .nav-link {
+    color: var(--ink-muted);
+    font-weight: 500;
+    font-size: .925rem;
+    padding: .45rem .85rem !important;
+    border-radius: 999px;
+    transition: background-color .15s ease, color .15s ease;
+}
+
+.app-navbar .nav-link:hover,
+.app-navbar .nav-link:focus-visible {
+    color: var(--mint-800);
+    background-color: var(--mint-50);
+}
+
+.app-navbar .nav-link.active {
+    color: var(--mint-800);
+    background-color: var(--mint-100);
+    font-weight: 600;
+}
+
+.app-navbar .navbar-toggler {
+    border-color: var(--line-strong);
+}
+
+.app-navbar .navbar-toggler:focus {
+    box-shadow: 0 0 0 .2rem var(--bs-focus-ring-color);
+}
+
+@media (max-width: 991.98px) {
+    .app-navbar .navbar-nav { padding-top: .75rem; gap: .15rem; }
+}
+
+/* ------------------------------------------------------------------ */
+/* 4. Buttons, forms, alerts, progress                                 */
+/* ------------------------------------------------------------------ */
+.btn { font-weight: 500; }
+
+.btn-primary {
+    --bs-btn-bg: var(--mint-700);
+    --bs-btn-border-color: var(--mint-700);
+    --bs-btn-hover-bg: var(--mint-800);
+    --bs-btn-hover-border-color: var(--mint-800);
+    --bs-btn-active-bg: var(--mint-900);
+    --bs-btn-active-border-color: var(--mint-900);
+    --bs-btn-disabled-bg: var(--mint-400);
+    --bs-btn-disabled-border-color: var(--mint-400);
+    --bs-btn-focus-shadow-rgb: 54, 169, 124;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--mint-700);
+    --bs-btn-border-color: var(--mint-300);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: var(--mint-700);
+    --bs-btn-hover-border-color: var(--mint-700);
+    --bs-btn-active-color: #fff;
+    --bs-btn-active-bg: var(--mint-800);
+    --bs-btn-active-border-color: var(--mint-800);
+    --bs-btn-focus-shadow-rgb: 54, 169, 124;
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: var(--ink-muted);
+    --bs-btn-border-color: var(--line-strong);
+    --bs-btn-hover-color: var(--ink);
+    --bs-btn-hover-bg: var(--mint-50);
+    --bs-btn-hover-border-color: var(--line-strong);
+    --bs-btn-active-color: var(--ink);
+    --bs-btn-active-bg: var(--mint-100);
+    --bs-btn-active-border-color: var(--line-strong);
+}
+
+.btn-outline-danger {
+    --bs-btn-border-color: #f1c7c7;
+}
+
+.form-label {
+    font-weight: 550;
+    font-size: .9rem;
+    color: var(--mint-900);
+    margin-bottom: .35rem;
+}
+
+.required { color: var(--mint-600); font-weight: 600; }
+
+.form-control,
+.form-select {
+    border-color: var(--line-strong);
+    padding: .55rem .8rem;
+}
+
+.form-control::placeholder { color: #9aaba3; }
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--mint-400);
+    box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color);
+}
+
+.form-check-input:checked {
+    background-color: var(--mint-600);
+    border-color: var(--mint-600);
+}
+
+.form-check-input:focus {
+    border-color: var(--mint-400);
+    box-shadow: 0 0 0 .25rem var(--bs-focus-ring-color);
+}
+
+.form-text { color: var(--ink-muted); }
+
+.alert-mint {
+    --bs-alert-color: var(--mint-900);
+    --bs-alert-bg: var(--mint-50);
+    --bs-alert-border-color: var(--mint-200);
+}
+
+.progress {
+    --bs-progress-bg: var(--mint-100);
+    --bs-progress-bar-bg: var(--mint-500);
+    --bs-progress-border-radius: 999px;
+}
+
+.progress-thin {
+    --bs-progress-height: .45rem;
+    min-width: 5rem;
+}
+
+.progress-bar.bar-full    { background-color: var(--mint-600); }
+.progress-bar.bar-close   { background-color: var(--mint-400); }
+.progress-bar.bar-stretch { background-color: #e5b257; }
+
+/* A bar with its percentage label to the right; keeps a steady width in table cells. */
+.meter {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    min-width: 9rem;
+}
+
+.meter .progress { flex: 1 1 auto; }
+
+.meter-value {
+    flex: 0 0 2.75rem;
+    text-align: right;
+    font-weight: 600;
+    font-size: .85rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--mint-900);
+}
+
+/* ------------------------------------------------------------------ */
+/* 5. Cards + page header                                              */
+/* ------------------------------------------------------------------ */
+.page-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+}
+
+.page-header h1 {
+    font-size: 1.75rem;
+    margin-bottom: .25rem;
+}
+
+.page-header p {
+    color: var(--ink-muted);
+    margin-bottom: 0;
+}
+
+.panel {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;   /* keeps table headers / list rows inside the rounded corners */
+}
+
+.panel-body { padding: 1.25rem 1.5rem; }
+
+.panel-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.panel-header h2 {
+    font-size: 1rem;
+    font-weight: 650;
+    margin: 0;
+}
+
+.panel-header .count {
+    font-size: .825rem;
+    color: var(--ink-muted);
+}
+
+.panel-footer {
+    padding: .85rem 1.5rem;
+    border-top: 1px solid var(--line);
+    font-size: .875rem;
+    background: var(--mint-25);
+    border-radius: 0 0 var(--bs-border-radius-lg) var(--bs-border-radius-lg);
+}
+
+/* Forms are laid out as stacked sections inside one panel. */
+.form-panel { max-width: 52rem; }
+
+.form-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--line);
+}
+
+.form-section legend,
+.form-section .legend {
+    float: left;      /* float + full width makes the legend sit inside the padding like a normal heading */
+    width: 100%;
+    font-size: .8rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--mint-700);
+    margin-bottom: 1rem;
+    padding: 0;
+}
+
+/* When a grid row follows the legend, the row's own gutter already provides the gap. */
+.form-section legend:has(+ .row) { margin-bottom: 0; }
+
+.form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    padding: 1.15rem 1.5rem;
+    background: var(--mint-25);
+    border-radius: 0 0 var(--bs-border-radius-lg) var(--bs-border-radius-lg);
+}
+
+/* ------------------------------------------------------------------ */
+/* 6. Tables                                                           */
+/* ------------------------------------------------------------------ */
+/*
+    Spacing rules:
+      - roomy cells (.8rem x 1rem), a little extra at the left/right edge of each row
+      - headers never wrap; short data (IDs, dates, money, badges, buttons) never wraps
+      - long text (titles, notes, skills) wraps inside a min/max width so columns stay readable
+      - wide tables scroll sideways inside their panel instead of squashing columns
+*/
+.table-mint {
+    --bs-table-bg: #fff;
+    --bs-table-color: var(--ink);
+    --bs-table-border-color: var(--line);
+    --bs-table-hover-bg: var(--mint-25);
+    --bs-table-hover-color: var(--ink);
+    margin-bottom: 0;
+    font-size: .9rem;
+}
+
+.table-mint > thead > tr > th {
+    background-color: var(--mint-50);
+    color: var(--mint-800);
+    font-size: .72rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    white-space: nowrap;
+    padding: .75rem 1rem;
+    border-bottom: 1px solid var(--line-strong);
+    vertical-align: middle;
+}
+
+.table-mint > tbody > tr > td {
+    padding: .85rem 1rem;
+    vertical-align: middle;
+    line-height: 1.4;
+}
+
+.table-mint > :not(caption) > tr > :first-child { padding-left: 1.5rem; }
+.table-mint > :not(caption) > tr > :last-child  { padding-right: 1.5rem; }
+
+.table-mint > tbody > tr:last-child > td { border-bottom: 0; }
+
+.table-mint > tbody > tr { transition: background-color .12s ease; }
+
+/* Column helpers */
+.table-mint .col-id {
+    width: 1%;
+    white-space: nowrap;
+    color: var(--ink-muted);
+    font-size: .825rem;
+}
+
+.table-mint .col-nowrap { white-space: nowrap; }
+
+.table-mint .col-num {
+    white-space: nowrap;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.table-mint .col-title {
+    min-width: 15rem;
+    max-width: 24rem;
+}
+
+.table-mint .col-medium {
+    min-width: 9rem;
+    max-width: 16rem;
+}
+
+.table-mint .col-skills {
+    min-width: 13rem;
+    max-width: 20rem;
+}
+
+.table-mint .col-actions {
+    width: 1%;
+    white-space: nowrap;
+    text-align: right;
+}
+
+.cell-primary {
+    display: block;
+    font-weight: 600;
+    color: var(--mint-900);
+}
+
+.cell-secondary {
+    display: block;
+    margin-top: .1rem;
+    font-size: .8rem;
+    color: var(--ink-muted);
+}
+
+.muted-dash { color: #a7b8b0; }
+
+.row-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .4rem;
+}
+
+.row-actions form { margin: 0; }
+
+.row-actions .btn {
+    --bs-btn-padding-y: .2rem;
+    --bs-btn-padding-x: .65rem;
+    --bs-btn-font-size: .8rem;
+}
+
+/* Expandable notes / description inside a table cell */
+.cell-details summary {
+    display: inline-block;
+    cursor: pointer;
+    list-style: none;
+    font-size: .8rem;
+    font-weight: 550;
+    color: var(--mint-700);
+    padding: .15rem .6rem;
+    border: 1px solid var(--mint-200);
+    border-radius: 999px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.cell-details summary::-webkit-details-marker { display: none; }
+
+.cell-details summary:hover { background: var(--mint-50); }
+
+.cell-details[open] summary {
+    background: var(--mint-100);
+    border-color: var(--mint-300);
+}
+
+.cell-details .cell-details-body {
+    margin-top: .5rem;
+    min-width: 15rem;
+    max-width: 24rem;
+    padding: .6rem .8rem;
+    background: var(--mint-25);
+    border: 1px solid var(--line);
+    border-radius: .5rem;
+    font-size: .85rem;
+    white-space: pre-line;
+    color: var(--ink);
+}
+
+.table-empty {
+    text-align: center;
+    color: var(--ink-muted);
+    padding: 2.75rem 1.5rem !important;
+}
+
+/* ------------------------------------------------------------------ */
+/* 7. Badges + chips                                                   */
+/* ------------------------------------------------------------------ */
+.status-badge,
+.flag {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .25rem .65rem;
+    border-radius: 999px;
+    font-size: .775rem;
+    font-weight: 600;
+    white-space: nowrap;
+    line-height: 1.3;
+}
+
+.status-badge::before {
+    content: "";
+    width: .45rem;
+    height: .45rem;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: .75;
+}
+
+.status-waiting      { background: #eef2f0; color: #4d5f57; }
+.status-interviewing { background: var(--mint-100); color: var(--mint-800); }
+.status-offer        { background: var(--mint-700); color: #fff; }
+.status-closed       { background: #fcecec; color: #a23b3b; }
+.status-other        { background: #f1f3f2; color: #56645e; }
+
+.flag-yes { background: var(--mint-50); color: var(--mint-800); border: 1px solid var(--mint-200); }
+.flag-no  { background: #f4f6f5; color: #73837c; border: 1px solid #e6ebe8; }
+
+.chip-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .35rem;
+}
+
+.chip {
+    display: inline-block;
+    padding: .2rem .6rem;
+    border-radius: 999px;
+    background: var(--mint-50);
+    border: 1px solid var(--mint-200);
+    color: var(--mint-800);
+    font-size: .775rem;
+    font-weight: 550;
+    white-space: nowrap;
+}
+
+.chip-missing {
+    background: #fff7ea;
+    border-color: #f3dcb0;
+    color: #8a5a12;
+}
+
+/* ------------------------------------------------------------------ */
+/* 8. Dashboard / Job Match pieces                                     */
+/* ------------------------------------------------------------------ */
+.stat-card {
+    position: relative;
+    height: 100%;
+    padding: 1.1rem 1.25rem 1.15rem;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: var(--bs-border-radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    background: var(--mint-300);
+}
+
+.stat-card.accent-strong::before  { background: var(--mint-700); }
+.stat-card.accent-neutral::before { background: #c9d4cf; }
+.stat-card.accent-danger::before  { background: #e7a3a3; }
+.stat-card.accent-warm::before    { background: #e5b257; }
+
+.stat-label {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--ink-muted);
+    margin-bottom: .35rem;
+}
+
+.stat-value {
+    font-size: 1.85rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--mint-900);
+    font-variant-numeric: tabular-nums;
+}
+
+.rate + .rate { margin-top: 1.35rem; }
+
+.rate-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: .45rem;
+}
+
+.rate-head .rate-name { font-weight: 600; color: var(--mint-900); }
+.rate-head .rate-value { font-weight: 700; font-size: 1.1rem; color: var(--mint-700); }
+
+.rate .progress { --bs-progress-height: .55rem; }
+
+.rate-note {
+    margin-top: .35rem;
+    font-size: .8rem;
+    color: var(--ink-muted);
+}
+
+.list-mint {
+    --bs-list-group-bg: #fff;
+    --bs-list-group-border-color: var(--line);
+}
+
+.list-mint .list-group-item {
+    padding: .85rem 1.5rem;
+    border-color: var(--line);
+}
+
+.list-mint .list-group-item:first-child { border-top: 0; }
+
+.date-tile {
+    flex: 0 0 3.25rem;
+    text-align: center;
+    border-radius: .55rem;
+    background: var(--mint-50);
+    border: 1px solid var(--mint-200);
+    padding: .3rem 0 .35rem;
+    line-height: 1.1;
+}
+
+.date-tile .month {
+    display: block;
+    font-size: .65rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--mint-700);
+}
+
+.date-tile .day {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--mint-900);
+}
+
+.best-match {
+    background: linear-gradient(135deg, var(--mint-50), #fff 70%);
+    border-color: var(--mint-200);
+}
+
+.best-match .big-percent {
+    font-size: 2.5rem;
+    font-weight: 750;
+    color: var(--mint-700);
+    line-height: 1;
+}
+
+.min-w-0 { min-width: 0; }

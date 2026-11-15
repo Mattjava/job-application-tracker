@@ -1,9 +1,12 @@
 from flask import Flask, jsonify, request, render_template, url_for, redirect
+from flask_bootstrap import Bootstrap5
 from crud import *
 from datetime import datetime
 import json, math
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
+
+bootstrap = Bootstrap5(app)
 
 def normalize(raw_form):
     for key in raw_form.keys():

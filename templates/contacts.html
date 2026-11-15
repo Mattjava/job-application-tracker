@@ -21,59 +21,65 @@
 
     {% set all_contacts = contacts | default([]) %}
 
-    <h1>Contacts</h1>
-    <p>Recruiters, hiring managers, and other people you know at each company.</p>
+    <div class="page-header">
+        <div>
+            <h1>Contacts</h1>
+            <p>Recruiters, hiring managers, and other people you know at each company.</p>
+        </div>
+        <a class="btn btn-primary" href="{{ url_for('add_contact') }}">+ Add contact</a>
+    </div>
 
-    <p><a href="{{ url_for('add_contact') }}">+ Add contact</a></p>
-
-    <p>{{ all_contacts | length }} contact{{ "" if all_contacts | length == 1 else "s" }}</p>
-
-    <table border="1">
-        <thead>
-            <tr>
-                <th scope="col">ID</th>
-                <th scope="col">Name</th>
-                <th scope="col">Company</th>
-                <th scope="col">Job title</th>
-                <th scope="col">Email</th>
-                <th scope="col">Phone</th>
-                <th scope="col">LinkedIn</th>
-                <th scope="col">Notes</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for contact in all_contacts | sort(attribute="last_name") %}
-                <tr>
-                    <td>{{ contact.contact_id }}</td>
-                    <td>{{ contact.first_name }} {{ contact.last_name }}</td>
-                    <td>{{ company_lookup.get(contact.company_id, "Company #" ~ contact.company_id) }}</td>
-                    <td>{{ m.show(contact.job_title) }}</td>
-                    <td>
-                        {% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}—{% endif %}
-                    </td>
-                    <td>
-                        {% if contact.phone %}<a href="tel:{{ contact.phone }}">{{ contact.phone }}</a>{% else %}—{% endif %}
-                    </td>
-                    <td>{{ m.external_link(contact.linkedin_url, "Profile") }}</td>
-                    <td>
-                        {% if contact.notes %}
-                            <details>
-                                <summary>View</summary>
-                                {{ contact.notes }}
-                            </details>
-                        {% else %}—{% endif %}
-                    </td>
-                    <td>
-                        <a href="{{ url_for('edit_contact_page', contact_id=contact.contact_id) }}">Edit</a>
-                        {{ m.delete_button(url_for("delete_contact_route", contact_id=contact.contact_id), contact.first_name ~ " " ~ contact.last_name) }}
-                    </td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="9">No contacts yet. <a href="{{ url_for('add_contact') }}">Add your first one.</a></td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="panel">
+        <div class="panel-header">
+            <h2>All contacts</h2>
+            <span class="count">{{ all_contacts | length }} contact{{ "" if all_contacts | length == 1 else "s" }}</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-mint table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" class="col-id">ID</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Company</th>
+                        <th scope="col">Email</th>
+                        <th scope="col">Phone</th>
+                        <th scope="col">LinkedIn</th>
+                        <th scope="col">Notes</th>
+                        <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contact in all_contacts | sort(attribute="last_name") %}
+                        <tr>
+                            <td class="col-id">#{{ contact.contact_id }}</td>
+                            <td class="col-title">
+                                <span class="cell-primary">{{ contact.first_name }} {{ contact.last_name }}</span>
+                                {% if contact.job_title %}<span class="cell-secondary">{{ contact.job_title }}</span>{% endif %}
+                            </td>
+                            <td class="col-medium">{{ company_lookup.get(contact.company_id, "Company #" ~ contact.company_id) }}</td>
+                            <td class="col-nowrap">
+                                {% if contact.email %}<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% else %}<span class="muted-dash">—</span>{% endif %}
+                            </td>
+                            <td class="col-nowrap">
+                                {% if contact.phone %}<a href="tel:{{ contact.phone }}">{{ contact.phone }}</a>{% else %}<span class="muted-dash">—</span>{% endif %}
+                            </td>
+                            <td class="col-nowrap">{{ m.external_link(contact.linkedin_url, "Profile ↗") }}</td>
+                            <td>{{ m.details_cell(contact.notes) }}</td>
+                            <td class="col-actions">
+                                {{ m.row_actions(url_for('edit_contact_page', contact_id=contact.contact_id),
+                                                 url_for("delete_contact_route", contact_id=contact.contact_id),
+                                                 contact.first_name ~ " " ~ contact.last_name) }}
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="table-empty">
+                                No contacts yet. <a href="{{ url_for('add_contact') }}">Add your first one.</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

@@ -51,156 +51,241 @@
         {%- else -%}Job #{{ job_id }}{%- endif -%}
     {%- endmacro %}
 
-    <h1>Dashboard</h1>
-    <p>An overview of your job search.</p>
+    <div class="page-header">
+        <div>
+            <h1>Dashboard</h1>
+            <p>An overview of your job search.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a class="btn btn-outline-primary" href="{{ url_for('job_match') }}">Check job match</a>
+            <a class="btn btn-primary" href="{{ url_for('add_app') }}">+ Add application</a>
+        </div>
+    </div>
 
-    <section>
-        <h2>At a glance</h2>
-        <dl>
-            <dt>Applications sent</dt>
-            <dd>{{ total }}</dd>
-
-            <dt>Waiting to hear back</dt>
-            <dd>{{ waiting | length }}</dd>
-
-            <dt>Interviewing</dt>
-            <dd>{{ interviewing | length }}</dd>
-
-            <dt>Offers</dt>
-            <dd>{{ offers | length }}</dd>
-
-            <dt>Rejected / closed</dt>
-            <dd>{{ closed | length }}</dd>
-        </dl>
+    {# ---- At a glance ---- #}
+    <section aria-labelledby="glance-title" class="mb-4">
+        <h2 id="glance-title" class="visually-hidden">At a glance</h2>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-xl-5 g-3">
+            {% for label, value, accent in [
+                ("Applications sent",    total,                 "accent-strong"),
+                ("Waiting to hear back", waiting | length,      "accent-neutral"),
+                ("Interviewing",         interviewing | length, ""),
+                ("Offers",               offers | length,       "accent-strong"),
+                ("Rejected / closed",    closed | length,       "accent-danger")
+            ] %}
+                <div class="col">
+                    <div class="stat-card {{ accent }}">
+                        <div class="stat-label">{{ label }}</div>
+                        <div class="stat-value">{{ value }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
     </section>
 
-    <section>
-        <h2>How it's going</h2>
-        <dl>
-            <dt>Response rate</dt>
-            <dd>
-                <meter min="0" max="100" value="{{ response_rate }}">{{ response_rate }}%</meter>
-                {{ response_rate }}% ({{ heard_back }} of {{ total }} applications got a response)
-            </dd>
+    <div class="row g-4 mb-4">
+        {# ---- Rates ---- #}
+        <div class="col-lg-5">
+            <section class="panel h-100" aria-labelledby="rates-title">
+                <div class="panel-header"><h2 id="rates-title">How it's going</h2></div>
+                <div class="panel-body">
+                    <div class="rate">
+                        <div class="rate-head">
+                            <span class="rate-name">Response rate</span>
+                            <span class="rate-value">{{ response_rate }}%</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Response rate"
+                             aria-valuenow="{{ response_rate }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: {{ response_rate }}%"></div>
+                        </div>
+                        <div class="rate-note">{{ heard_back }} of {{ total }} applications got a response</div>
+                    </div>
 
-            <dt>Interview rate</dt>
-            <dd>
-                <meter min="0" max="100" value="{{ interview_rate }}">{{ interview_rate }}%</meter>
-                {{ interview_rate }}% ({{ interviewing | length + offers | length }} of {{ total }} reached an interview or offer)
-            </dd>
+                    <div class="rate">
+                        <div class="rate-head">
+                            <span class="rate-name">Interview rate</span>
+                            <span class="rate-value">{{ interview_rate }}%</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Interview rate"
+                             aria-valuenow="{{ interview_rate }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bar-full" style="width: {{ interview_rate }}%"></div>
+                        </div>
+                        <div class="rate-note">{{ interviewing | length + offers | length }} of {{ total }} reached an interview or offer</div>
+                    </div>
 
-            <dt>Cover letters sent</dt>
-            <dd>{{ cover_letters }} of {{ total }}</dd>
-        </dl>
-    </section>
+                    {% set cover_rate = (cover_letters / total * 100) | round | int if total else 0 %}
+                    <div class="rate">
+                        <div class="rate-head">
+                            <span class="rate-name">Cover letters sent</span>
+                            <span class="rate-value">{{ cover_letters }} <span class="fs-6 fw-normal text-body-secondary">of {{ total }}</span></span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Cover letters sent"
+                             aria-valuenow="{{ cover_rate }}" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar bar-close" style="width: {{ cover_rate }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
 
-    <section>
-        <h2>Applications by status</h2>
-        {% if total %}
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th scope="col">Status</th>
-                        <th scope="col">Count</th>
-                        <th scope="col">Share</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {# Known statuses in pipeline order, then any other status found in the data #}
-                    {% set other_statuses = apps | map(attribute="status") | reject("in", m.STATUSES) | unique | list %}
-                    {% for status in m.STATUSES + other_statuses %}
-                        {% set count = apps | selectattr("status", "equalto", status) | list | length %}
-                        {% if count %}
-                            {% set share = (count / total * 100) | round | int %}
-                            <tr>
-                                <td>{{ m.show(status) }}</td>
-                                <td>{{ count }}</td>
-                                <td>
-                                    <meter min="0" max="100" value="{{ share }}">{{ share }}%</meter>
-                                    {{ share }}%
-                                </td>
-                            </tr>
+        {# ---- Applications by status ---- #}
+        <div class="col-lg-7">
+            <section class="panel h-100" aria-labelledby="status-title">
+                <div class="panel-header"><h2 id="status-title">Applications by status</h2></div>
+                {% if total %}
+                    <div class="table-responsive">
+                        <table class="table table-mint">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Status</th>
+                                    <th scope="col" class="col-num">Count</th>
+                                    <th scope="col" style="width: 45%">Share</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {# Known statuses in pipeline order, then any other status found in the data #}
+                                {% set other_statuses = apps | map(attribute="status") | reject("in", m.STATUSES) | unique | list %}
+                                {% for status in m.STATUSES + other_statuses %}
+                                    {% set count = apps | selectattr("status", "equalto", status) | list | length %}
+                                    {% if count %}
+                                        {% set share = (count / total * 100) | round | int %}
+                                        <tr>
+                                            <td class="col-nowrap">{{ m.status_badge(status) }}</td>
+                                            <td class="col-num">{{ count }}</td>
+                                            <td>{{ m.meter(share) }}</td>
+                                        </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="panel-body text-body-secondary">
+                        No applications yet. <a href="{{ url_for('add_app') }}">Add your first one.</a>
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        {# ---- Recent applications ---- #}
+        <div class="col-lg-7">
+            <section class="panel h-100 d-flex flex-column" aria-labelledby="recent-title">
+                <div class="panel-header"><h2 id="recent-title">Recent applications</h2></div>
+                {% set recent = (apps | sort(attribute="application_date", reverse=true) | list)[:5] %}
+                {% if recent %}
+                    <div class="table-responsive flex-grow-1">
+                        <table class="table table-mint table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Date applied</th>
+                                    <th scope="col">Job</th>
+                                    <th scope="col">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for app in recent %}
+                                    <tr>
+                                        <td class="col-nowrap">{{ app.application_date }}</td>
+                                        <td class="col-title">{{ job_label(app.job_id) }}</td>
+                                        <td class="col-nowrap">{{ m.status_badge(app.status) }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="panel-footer"><a href="{{ url_for('app_page') }}">See all applications →</a></div>
+                {% else %}
+                    <div class="panel-body text-body-secondary">Nothing here yet.</div>
+                {% endif %}
+            </section>
+        </div>
+
+        {# ---- Interviews ---- #}
+        <div class="col-lg-5">
+            <section class="panel h-100" aria-labelledby="interviews-title">
+                <div class="panel-header"><h2 id="interviews-title">Interviews</h2></div>
+                {% set with_interview = apps | selectattr("interview_date") | sort(attribute="interview_date") | list %}
+                {% if with_interview %}
+                    <ul class="list-group list-group-flush list-mint">
+                        {% for app in with_interview %}
+                            <li class="list-group-item d-flex align-items-center gap-3">
+                                <div class="date-tile" aria-hidden="true">
+                                    <span class="month">{{ app.interview_date.strftime("%b") }}</span>
+                                    <span class="day">{{ app.interview_date.strftime("%d") }}</span>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
+                                    <span class="cell-primary">{{ job_label(app.job_id) }}</span>
+                                    <span class="cell-secondary">{{ app.interview_date.strftime("%a, %b %d %Y at %I:%M %p") }}</span>
+                                </div>
+                                {{ m.status_badge(app.status) }}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="panel-body text-body-secondary">
+                        No interviews scheduled. Add an interview date to an application to see it here.
+                    </div>
+                {% endif %}
+            </section>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {# ---- Open jobs not applied to ---- #}
+        <div class="col-lg-8">
+            <section class="panel h-100 d-flex flex-column" aria-labelledby="open-jobs-title">
+                <div class="panel-header">
+                    <h2 id="open-jobs-title">Open jobs you haven't applied to</h2>
+                    {% if not_applied %}
+                        <span class="count">{{ not_applied | length }} active job{{ "" if not_applied | length == 1 else "s" }} with no application yet</span>
+                    {% endif %}
+                </div>
+                {% if not_applied %}
+                    <ul class="list-group list-group-flush list-mint flex-grow-1">
+                        {% for job in not_applied[:5] %}
+                            <li class="list-group-item d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <span class="fw-medium">{{ job_label(job.job_id) }}</span>
+                                {% if job.salary_min is not none or job.salary_max is not none %}
+                                    <span class="text-body-secondary small text-nowrap">{{ m.money(job.salary_min) }} – {{ m.money(job.salary_max) }}</span>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                        {% if not_applied | length > 5 %}
+                            <li class="list-group-item text-body-secondary small">…and {{ not_applied | length - 5 }} more.</li>
                         {% endif %}
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p>No applications yet. <a href="{{ url_for('add_app') }}">Add your first one.</a></p>
-        {% endif %}
-    </section>
+                        <br>
+                    </ul>
+                    <div class="panel-footer d-flex flex-wrap gap-3">
+                        <a href="{{ url_for('job_page') }}">See all jobs →</a>
+                        <a href="{{ url_for('job_match') }}">Check how well you match →</a>
+                    </div>
+                {% else %}
+                    <div class="panel-body text-body-secondary">You've applied to every active job you're tracking.</div>
+                {% endif %}
+            </section>
+        </div>
 
-    <section>
-        <h2>Interviews</h2>
-        {% set with_interview = apps | selectattr("interview_date") | sort(attribute="interview_date") | list %}
-        {% if with_interview %}
-            <ul>
-                {% for app in with_interview %}
-                    <li>
-                        <strong>{{ app.interview_date.strftime("%a, %b %d %Y at %I:%M %p") }}</strong> —
-                        {{ job_label(app.job_id) }} ({{ app.status }})
+        {# ---- Tracker totals ---- #}
+        <div class="col-lg-4">
+            <section class="panel h-100" aria-labelledby="tracker-title">
+                <div class="panel-header"><h2 id="tracker-title">Your tracker</h2></div>
+                <ul class="list-group list-group-flush list-mint">
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('company_page') }}">Companies</a>
+                        <span class="fw-semibold">{{ all_companies | length }}</span>
                     </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p>No interviews scheduled. Add an interview date to an application to see it here.</p>
-        {% endif %}
-    </section>
-
-    <section>
-        <h2>Recent applications</h2>
-        {% set recent = (apps | sort(attribute="application_date", reverse=true) | list)[:5] %}
-        {% if recent %}
-            <table border="1">
-                <thead>
-                    <tr>
-                        <th scope="col">Date applied</th>
-                        <th scope="col">Job</th>
-                        <th scope="col">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for app in recent %}
-                        <tr>
-                            <td>{{ app.application_date }}</td>
-                            <td>{{ job_label(app.job_id) }}</td>
-                            <td>{{ m.show(app.status) }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-            <p><a href="{{ url_for('app_page') }}">See all applications</a></p>
-        {% else %}
-            <p>Nothing here yet.</p>
-        {% endif %}
-    </section>
-
-    <section>
-        <h2>Open jobs you haven't applied to</h2>
-        {% if not_applied %}
-            <p>{{ not_applied | length }} active job{{ "" if not_applied | length == 1 else "s" }} with no application yet:</p>
-            <ul>
-                {% for job in not_applied[:5] %}
-                    <li>
-                        {{ job_label(job.job_id) }}
-                        {% if job.salary_min is not none or job.salary_max is not none %}
-                            ({{ m.money(job.salary_min) }} – {{ m.money(job.salary_max) }})
-                        {% endif %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('job_page') }}">Jobs</a>
+                        <span class="fw-semibold">{{ all_jobs | length }} <span class="text-body-secondary fw-normal small">({{ active_jobs | length }} active)</span></span>
                     </li>
-                {% endfor %}
-            </ul>
-            {% if not_applied | length > 5 %}<p>…and {{ not_applied | length - 5 }} more.</p>{% endif %}
-            <p><a href="{{ url_for('job_page') }}">See all jobs</a> · <a href="{{ url_for('job_match') }}">Check how well you match</a></p>
-        {% else %}
-            <p>You've applied to every active job you're tracking.</p>
-        {% endif %}
-    </section>
-
-    <section>
-        <h2>Your tracker</h2>
-        <ul>
-            <li><a href="{{ url_for('company_page') }}">{{ all_companies | length }} companies</a></li>
-            <li><a href="{{ url_for('job_page') }}">{{ all_jobs | length }} jobs</a> ({{ active_jobs | length }} active)</li>
-            <li><a href="{{ url_for('contact_page') }}">{{ all_contacts | length }} contacts</a></li>
-        </ul>
-    </section>
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('contact_page') }}">Contacts</a>
+                        <span class="fw-semibold">{{ all_contacts | length }}</span>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </div>
 {% endblock %}
