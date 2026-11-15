@@ -182,7 +182,7 @@ def add_contact():
 @app.route("/apps/add", methods=["GET", "POST"])
 def add_app():
     if request.method == "GET":
-        return render_template("application_form.html", jobs=show_all_jobs())
+        return render_template("application_form.html", jobs=show_all_jobs(), companies=show_all_companies())
     
     body = normalize(dict(request.form))
     
@@ -286,7 +286,7 @@ def edit_contact_page(contact_id):
 def edit_application_page(app_id):
     if request.method == "GET":
         app_details = get_one_application(app_id)
-        return render_template("application_form.html", application=app_details, jobs=show_all_jobs())
+        return render_template("application_form.html", application=app_details, jobs=show_all_jobs(), companies=show_all_companies())
     
     body = normalize(dict(request.form))
     
@@ -308,7 +308,7 @@ def edit_application_page(app_id):
 def edit_company_page(company_id):
     if request.method == "GET":
         company_details = get_one_company(company_id)
-        return render_template("job_form.html", company=company_details)
+        return render_template("company_form.html", company=company_details)
     
     body = normalize(dict(request.form))
     
