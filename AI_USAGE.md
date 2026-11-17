@@ -18,5 +18,12 @@
 - References to backend functions and routes were changed to use url_for. This makes it easier to better understand the code
 - Supplied values from the backend into the UI. Claude didn't set up the inputs for rendering, so I have to put in the work
 - Changed some references to a function. For example, I changed a function's name, so I have to step into the HTML and change it there as well. 
+- Changed various aspects of the UI. For example, I re-organized the statues list on the dashboard. I felt the original design made by the AI did not meet the needs of the user, so I went ahead and re-arranged them by hand.
+- Added some decorations to the AI generated code. For example, the icon in the top left corner was not added in by AI. I added it in since it looks more nicer there than what AI had originally.
 
 # Lessons Learned
+
+- AI is a useful tool for creating long pieces of code while letting you focus on other tasks. However, it is not perfect.
+- AI is prone to making mistakes, so you are still responsible for looking over and fixing what it misses.
+- AI also does not truly understand the design on your project. It is limited to what you feed it, so it can't see important aspects of the app such as user's needs
+- AI can be a crutch at times, letting you generate code and funtions you do not know. However, you are still expected to know how it works. Additionally, if something breaks, having prior knowledge is useful in fixing them.

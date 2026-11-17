@@ -12,7 +12,7 @@ search process.
 ## Technologies
 - MySQL Database
 - Python with Flask
-- HTML/CSS for the web interface
+- HTML/CSS/Bootstrap for the web interface
 
 # Set-up
 
@@ -24,3 +24,4 @@ search process.
 6. Activate your virtual environment (run either venv/Source/activate on Windows or source venv/bin/activate on Linux/MacOS)
 7. Run "pip install -r requirements.txt" to install the dependences
 8. Run "python app.py" to run the app 
+9. Open a browser and follow the link "http://127.0.0.1:5000/"
