@@ -61,14 +61,14 @@ CREATE TABLE `applications` (
   `cover_letter_sent` tinyint(1) DEFAULT '0',
   `response_date` date DEFAULT NULL,
   `interview_date` datetime DEFAULT NULL,
-  `interview_data` json DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `interview_data` json DEFAULT NULL,
   PRIMARY KEY (`application_id`),
   KEY `job_id` (`job_id`),
   KEY `idx_app_status` (`status`),
   CONSTRAINT `applications_ibfk_1` FOREIGN KEY (`job_id`) REFERENCES `jobs` (`job_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -77,7 +77,7 @@ CREATE TABLE `applications` (
 
 LOCK TABLES `applications` WRITE;
 /*!40000 ALTER TABLE `applications` DISABLE KEYS */;
-INSERT INTO `applications` VALUES (1,1,'2025-01-16','Offer Accepted','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(2,3,'2025-01-13','Interview Completed','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(3,4,'2025-01-09','Interview Completed','v2.0',0,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(4,5,'2025-01-15','Applied','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(5,7,'2025-01-12','Phone Screen','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(35,6,'2026-10-04','Applied','v3.0',1,NULL,NULL,NULL,NULL,'2026-10-04 18:49:31'),(36,36,'2026-11-03','Pending',NULL,0,NULL,NULL,NULL,NULL,'2026-11-03 16:41:22');
+INSERT INTO `applications` VALUES (1,1,'2025-01-16','Offer Accepted','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29',NULL),(2,3,'2025-01-13','Rejected','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29','{\"feedback\": \"Strong technical skills, good communication\", \"next_steps\": \"Offer extended!\", \"interviewers\": [\"Sarah Johnson\", \"Mike Chen\", \"David Brown\"], \"offer_amount\": 85000, \"interview_rounds\": 2, \"technical_questions\": [\"SQL joins\", \"Python basics\", \"API design\"]}'),(3,4,'2025-01-09','Interview Completed','v2.0',0,NULL,NULL,NULL,'2026-09-19 18:06:29',NULL),(4,5,'2025-01-15','Applied','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29',NULL),(5,7,'2025-01-12','Phone Screen','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29','{\"feedback\": \"Needs more experience with cloud platforms\", \"interviewers\": [\"Emily Williams\"], \"interview_rounds\": 1, \"technical_questions\": [\"Database normalization\", \"Transaction isolation\"]}'),(35,6,'2026-10-04','Applied','v3.0',1,NULL,NULL,NULL,'2026-10-04 18:49:31',NULL),(36,36,'2026-11-03','Pending',NULL,0,NULL,NULL,NULL,'2026-11-03 16:41:22',NULL),(38,33,'2026-11-03','Interview Scheduled','3.0v',0,'2026-11-13','2026-11-18 13:59:00',NULL,'2026-11-14 18:59:28',NULL),(39,39,'2026-11-03','Rejected','v2.1',0,'2026-11-12','2026-11-17 12:06:00',NULL,'2026-11-17 17:07:34','{\"rating\": 4, \"feedback\": [\"Need more experience\"], \"next_steps\": null, \"interviewers\": [\"John Doe\", \"Jane Doe\"], \"interview_rounds\": 3, \"technical_questions\": [\"Experience with Frontend\"]}');
 /*!40000 ALTER TABLE `applications` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -170,7 +170,7 @@ CREATE TABLE `jobs` (
   KEY `idx_job_title` (`job_title`),
   KEY `idx_company_type` (`company_id`,`job_type`),
   CONSTRAINT `jobs_ibfk_1` FOREIGN KEY (`company_id`) REFERENCES `companies` (`company_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=37 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -179,7 +179,7 @@ CREATE TABLE `jobs` (
 
 LOCK TABLES `jobs` WRITE;
 /*!40000 ALTER TABLE `jobs` DISABLE KEYS */;
-INSERT INTO `jobs` VALUES (1,1,'Software Developer',NULL,70000.00,90000.00,'Full-time',NULL,'2025-01-15',1,'2026-09-19 18:02:14',NULL),(2,1,'Database Administrator',NULL,75000.00,95000.00,'Full-time',NULL,'2025-01-10',1,'2026-09-19 18:02:14',NULL),(3,2,'Data Analyst',NULL,65000.00,85000.00,'Full-time',NULL,'2025-01-12',1,'2026-09-19 18:02:14',NULL),(4,3,'Cloud Engineer',NULL,80000.00,100000.00,'Full-time',NULL,'2025-01-08',1,'2026-09-19 18:02:14',NULL),(5,4,'Junior Developer',NULL,55000.00,70000.00,'Full-time',NULL,'2025-01-14',1,'2026-09-19 18:02:14',NULL),(6,4,'Senior Developer',NULL,95000.00,120000.00,'Full-time',NULL,'2025-01-14',1,'2026-09-19 18:02:14',NULL),(7,5,'ML Engineer',NULL,90000.00,115000.00,'Full-time',NULL,'2025-01-11',1,'2026-09-19 18:02:14',NULL),(25,1,'QA Engineer',NULL,60000.00,80000.00,'Full-time',NULL,'2025-01-05',1,'2026-09-25 00:33:08',NULL),(26,2,'Business Analyst',NULL,65000.00,85000.00,'Full-time',NULL,'2025-01-06',1,'2026-09-25 00:33:08',NULL),(27,2,'Data Scientist',NULL,85000.00,110000.00,'Full-time',NULL,'2025-01-07',1,'2026-09-25 00:33:08',NULL),(28,3,'DevOps Engineer',NULL,80000.00,105000.00,'Full-time',NULL,'2025-01-08',1,'2026-09-25 00:33:08',NULL),(29,3,'Security Analyst',NULL,75000.00,95000.00,'Full-time',NULL,'2025-01-09',1,'2026-09-25 00:33:08',NULL),(30,4,'UI/UX Designer',NULL,60000.00,80000.00,'Full-time',NULL,'2025-01-10',1,'2026-09-25 00:33:08',NULL),(31,5,'Product Manager',NULL,90000.00,120000.00,'Full-time',NULL,'2025-01-11',1,'2026-09-25 00:33:08',NULL),(32,1,'Technical Writer',NULL,55000.00,75000.00,'Contract',NULL,'2025-01-12',1,'2026-09-25 00:33:08',NULL),(33,2,'Intern - Data',NULL,30000.00,40000.00,'Internship',NULL,'2025-01-13',1,'2026-09-25 00:33:08',NULL),(34,4,'Intern - Development',NULL,32000.00,42000.00,'Internship',NULL,'2025-01-14',1,'2026-09-25 00:33:08',NULL),(35,7,'Software Architect',NULL,120000.00,150000.00,'Full-time',NULL,NULL,1,'2026-10-04 18:39:28','[\"Java\", \"SQL\"]'),(36,1,'Software Engineer III','A job',15.00,50.00,'Full-Time',NULL,NULL,1,'2026-11-03 16:35:58','[\"Python\", \"SQL\", \"HTML\"]');
+INSERT INTO `jobs` VALUES (1,1,'Software Developer',NULL,70000.00,90000.00,'Full-time',NULL,'2025-01-15',1,'2026-09-19 18:02:14','{\"education\": \"Bachelor in CS or related field\", \"remote_option\": true, \"required_skills\": [\"Python\", \"SQL\", \"Git\"], \"experience_years\": 2, \"preferred_skills\": [\"Flask\", \"Docker\", \"AWS\"]}'),(2,1,'Database Administrator',NULL,75000.00,95000.00,'Full-time',NULL,'2025-01-10',1,'2026-09-19 18:02:14',NULL),(3,2,'Data Analyst',NULL,65000.00,85000.00,'Full-time',NULL,'2025-01-12',1,'2026-09-19 18:02:14','{\"education\": \"Bachelor degree\", \"remote_option\": false, \"required_skills\": [\"SQL\", \"Excel\", \"Tableau\"], \"experience_years\": 1, \"preferred_skills\": [\"Python\", \"R\"]}'),(4,3,'Cloud Engineer',NULL,80000.00,100000.00,'Full-time',NULL,'2025-01-08',1,'2026-09-19 18:02:14',NULL),(5,4,'Junior Developer',NULL,55000.00,70000.00,'Full-time',NULL,'2025-01-14',1,'2026-09-19 18:02:14',NULL),(6,4,'Senior Developer',NULL,95000.00,120000.00,'Full-time',NULL,'2025-01-14',1,'2026-09-19 18:02:14',NULL),(7,5,'ML Engineer',NULL,90000.00,115000.00,'Full-time',NULL,'2025-01-11',1,'2026-09-19 18:02:14',NULL),(25,1,'QA Engineer',NULL,60000.00,80000.00,'Full-time',NULL,'2025-01-05',1,'2026-09-25 00:33:08',NULL),(26,2,'Business Analyst',NULL,65000.00,85000.00,'Full-time',NULL,'2025-01-06',1,'2026-09-25 00:33:08',NULL),(27,2,'Data Scientist',NULL,85000.00,110000.00,'Full-time',NULL,'2025-01-07',1,'2026-09-25 00:33:08',NULL),(28,3,'DevOps Engineer',NULL,80000.00,105000.00,'Full-time',NULL,'2025-01-08',1,'2026-09-25 00:33:08',NULL),(29,3,'Security Analyst',NULL,75000.00,95000.00,'Full-time',NULL,'2025-01-09',1,'2026-09-25 00:33:08',NULL),(30,4,'UI/UX Designer',NULL,60000.00,80000.00,'Full-time',NULL,'2025-01-10',1,'2026-09-25 00:33:08',NULL),(31,5,'Product Manager',NULL,90000.00,120000.00,'Full-time',NULL,'2025-01-11',1,'2026-09-25 00:33:08',NULL),(32,1,'Technical Writer',NULL,55000.00,75000.00,'Contract',NULL,'2025-01-12',1,'2026-09-25 00:33:08',NULL),(33,2,'Intern - Data',NULL,30000.00,40000.00,'Internship',NULL,'2025-01-13',1,'2026-09-25 00:33:08',NULL),(34,4,'Intern - Development',NULL,32000.00,42000.00,'Internship',NULL,'2025-01-14',1,'2026-09-25 00:33:08',NULL),(36,1,'Software Engineer III','A job',15.00,50.00,'Full-Time',NULL,NULL,1,'2026-11-03 16:35:58','[\"Python\", \"SQL\", \"HTML\"]'),(37,9,'Engineer','Run tests, develop frontend, and manage pipelines',20.00,50.00,'Full-time',NULL,'2026-11-14',1,'2026-11-14 18:35:03','[\"Python\", \"Docker\", \"Node\", \"React\"]'),(39,4,'Frontend Engineer','Work with React to deliver a seamless UI to the user.',20.00,30.00,'Full-Time',NULL,NULL,1,'2026-11-17 17:05:10','{\"education\": \"Bachelor\'s Degree\", \"remote_option\": false, \"required_skills\": [\"HTML\", \"CSS\", \"React\", \"JavaScript\", \"Node\"], \"experience_years\": 1, \"preferred_skills\": [\"Docker\", \"AWS\", \"Express.js\"]}');
 /*!40000 ALTER TABLE `jobs` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -192,4 +192,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-11-12 17:37:35
+-- Dump completed on 2026-11-17 13:05:25
