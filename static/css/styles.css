@@ -552,7 +552,8 @@ a { text-underline-offset: .2em; }
     opacity: .75;
 }
 
-.status-waiting      { background: #eef2f0; color: #4d5f57; }
+.status-applied      { background: #ecfaf0; color: #4d5f57; }
+.status-waiting { background:#f5f9c7; color:#4a4a4a}
 .status-interviewing { background: var(--mint-100); color: var(--mint-800); }
 .status-offer        { background: var(--mint-700); color: #fff; }
 .status-closed       { background: #fcecec; color: #a23b3b; }

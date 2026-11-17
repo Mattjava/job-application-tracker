@@ -7,13 +7,14 @@
 {# Application statuses, grouped by pipeline stage.
    The application form and the dashboard both read from this, so edit it here only. #}
 {% set STATUS_GROUPS = {
-    "Waiting":      ["Applied", "Pending"],
+    "Waiting":      ["Pending"],
+    "Applied":  ["Applied"],
     "Interviewing": ["Phone Screen", "Interview Scheduled", "Interview Completed"],
     "Offer":        ["Offer Received", "Offer Accepted"],
     "Closed":       ["Rejected", "Withdrawn", "Offer Declined"]
 } %}
 
-{% set STATUSES = STATUS_GROUPS["Waiting"] + STATUS_GROUPS["Interviewing"] + STATUS_GROUPS["Offer"] + STATUS_GROUPS["Closed"] %}
+{% set STATUSES = STATUS_GROUPS["Waiting"] + STATUS_GROUPS["Applied"] + STATUS_GROUPS["Interviewing"] + STATUS_GROUPS["Offer"] + STATUS_GROUPS["Closed"] %}
 
 {% set JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Temporary"] %}
 

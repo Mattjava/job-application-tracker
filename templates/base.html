@@ -24,10 +24,12 @@
         ("/job-match", "job_match",    "Job Match")
     ] %}
 
+    <!--Source of icon:  https://icons.getbootstrap.com/icons/suitcase/ -->
+
     <nav class="navbar navbar-expand-lg app-navbar sticky-top">
         <div class="container-xxl">
             <a class="navbar-brand" href="{{ url_for('home_page') }}">
-                <span class="brand-mark" aria-hidden="true">JT</span>
+                <span class="brand-mark" aria-hidden="true"><img style="width: 25px; height: 25px; filter: brightness(0) invert(1);" class="object-fit-cover" src="{{ url_for('static', filename='images/suitcase.svg') }}"></i></span>
                 Job Application Tracker
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#main-nav"
@@ -73,7 +75,7 @@
     </main>
 
     <footer class="app-footer py-4">
-        <div class="container-xxl">Job Application Tracker</div>
+        <div class="container-xxl">Job Application Tracker - Matthew</div>
     </footer>
 
     {{ bootstrap.load_js() }}
