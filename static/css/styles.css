@@ -521,6 +521,27 @@ a { text-underline-offset: .2em; }
     color: var(--ink);
 }
 
+/* Structured content (lists, labels) inside an expandable cell: keep normal whitespace. */
+.cell-details .cell-details-body.is-structured { white-space: normal; }
+
+.detail-list { margin: 0; }
+
+.detail-list dt {
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-muted);
+}
+
+.detail-list dd { margin: .1rem 0 .6rem; }
+.detail-list dd:last-child { margin-bottom: 0; }
+
+.detail-list ul {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
 .table-empty {
     text-align: center;
     color: var(--ink-muted);
@@ -585,6 +606,38 @@ a { text-underline-offset: .2em; }
     border-color: #f3dcb0;
     color: #8a5a12;
 }
+
+/* Preferred (nice-to-have) skills: same shape, lighter weight. */
+.chip-preferred {
+    background: #fff;
+    border-style: dashed;
+    border-color: var(--mint-300);
+    color: var(--mint-700);
+}
+
+/* A labelled group of chips, e.g. "Required" / "Preferred" in the jobs table. */
+.chip-group:not(:first-child) { margin-top: .5rem; }
+
+.chip-group-label {
+    display: block;
+    margin-bottom: .25rem;
+    font-size: .7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--ink-muted);
+}
+
+.rating-stars {
+    display: inline-flex;
+    gap: .05rem;
+    font-size: .9rem;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.rating-stars .star-on  { color: #d49a1e; }
+.rating-stars .star-off { color: #d9e2dd; }
 
 /* ------------------------------------------------------------------ */
 /* 8. Dashboard / Job Match pieces                                     */

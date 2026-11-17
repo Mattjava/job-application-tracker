@@ -5,6 +5,11 @@
         jobs      - rows from show_all_jobs()
         companies - rows from show_all_companies()  (used to show the company name instead of company_id)
 
+    job.requirements must already be parsed from JSON (a dict, not a string) with the keys:
+        required_skills (list), preferred_skills (list), education (str),
+        experience_years (int), remote_option (bool)
+    Older rows that are still a plain list of skills are shown as required_skills.
+
     Links / forms on this page point to:
         GET  /jobs/add             -> job_form.html (new)
         GET  /jobs/<job_id>/edit   -> job_form.html (edit)
@@ -45,7 +50,9 @@
                         <th scope="col">Salary range</th>
                         <th scope="col">Date posted</th>
                         <th scope="col">Active</th>
-                        <th scope="col">Required skills</th>
+                        <th scope="col">Remote</th>
+                        <th scope="col">Skills</th>
+                        <th scope="col">Qualifications</th>
                         <th scope="col">Description</th>
                         <th scope="col">Posting</th>
                         <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
@@ -53,6 +60,10 @@
                 </thead>
                 <tbody>
                     {% for job in all_jobs %}
+                        {% set raw_req = job.requirements %}
+                        {% set req = raw_req if raw_req is mapping
+                                     else {"required_skills": raw_req} if (raw_req is iterable and raw_req is not string)
+                                     else {} %}
                         <tr>
                             <td class="col-id">#{{ job.job_id }}</td>
                             <td class="col-title">
@@ -66,7 +77,18 @@
                             </td>
                             <td class="col-nowrap">{{ m.show(job.date_posted) }}</td>
                             <td class="col-nowrap">{{ m.yes_no_badge(job.is_active) }}</td>
-                            <td class="col-skills">{{ m.requirement_chips(job.requirements) }}</td>
+                            <td class="col-nowrap">
+                                {% if req.get("remote_option") is none %}<span class="muted-dash">—</span>
+                                {% else %}{{ m.yes_no_badge(req.remote_option) }}{% endif %}
+                            </td>
+                            <td class="col-skills">{{ m.skill_groups(req.get("required_skills"), req.get("preferred_skills")) }}</td>
+                            <td class="col-medium">
+                                {% if req.get("experience_years") is none and not req.get("education") %}<span class="muted-dash">—</span>
+                                {% else %}
+                                    <span class="d-block">{{ m.experience(req.get("experience_years")) }}</span>
+                                    {% if req.get("education") %}<span class="cell-secondary">{{ req.education }}</span>{% endif %}
+                                {% endif %}
+                            </td>
                             <td>{{ m.details_cell(job.job_description) }}</td>
                             <td class="col-nowrap">{{ m.external_link(job.posting_url, "Open ↗") }}</td>
                             <td class="col-actions">
@@ -78,7 +100,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="10" class="table-empty">
+                            <td colspan="12" class="table-empty">
                                 No jobs yet. <a href="{{ url_for('add_job') }}">Add your first one.</a>
                             </td>
                         </tr>

@@ -9,17 +9,28 @@
         /jobs/add                when adding
         /jobs/<job_id>/edit      when editing
 
-    Field names match the columns in the jobs table.
+    Field names match the columns in the jobs table, except the Requirements section (see below).
     Notes for the backend:
       - an unchecked checkbox is not sent, so read is_active as `1 if "is_active" in request.form else 0`.
-      - "requirements" comes in as comma-separated text ("Python, SQL"). The jobs column is JSON, so it
-        needs json.dumps([s.strip() for s in text.split(",") if s.strip()]) before saving.
+      - There is no "requirements" field any more. The Requirements section sends one field per JSON key,
+        and the backend builds the JSON column from them:
+            required_skills   comma-separated text ("Python, SQL")  -> list of strings
+            preferred_skills  comma-separated text                  -> list of strings
+            education         text                                  -> string or null
+            experience_years  number                                -> int or null
+            remote_option     checkbox, only sent when checked      -> true / false
+      - When editing, job.requirements must already be parsed from JSON (a dict, not a string).
+        An older row that is a plain list of skills is shown as required_skills.
 #}
 {% extends "base.html" %}
 {% import "macros.html" as m %}
 
 {% set editing = job is defined and job %}
 {% set j = job if editing else {} %}
+{% set raw_req = j.requirements %}
+{% set req = raw_req if raw_req is mapping
+             else {"required_skills": raw_req} if (raw_req is iterable and raw_req is not string)
+             else {} %}
 
 {% block title %}{{ "Edit" if editing else "Add" }} job{% endblock %}
 
@@ -71,13 +82,55 @@
                     <label for="job_description" class="form-label">Description</label>
                     <textarea id="job_description" name="job_description" class="form-control" rows="6">{{ j.job_description or '' }}</textarea>
                 </div>
+            </div>
+        </fieldset>
+
+        <fieldset class="form-section">
+            <legend>Requirements</legend>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="required_skills" class="form-label">Required skills</label>
+                    <input type="text" id="required_skills" name="required_skills" class="form-control"
+                           placeholder="Comma-separated, e.g. Python, SQL, HTML"
+                           value="{{ m.list_text(req.get('required_skills')) }}">
+                    <div class="form-text">Used by <a href="{{ url_for('job_match') }}">Job Match</a> to compare against your skills.</div>
+                </div>
 
                 <div class="col-12">
-                    <label for="requirements" class="form-label">Required skills</label>
-                    <input type="text" id="requirements" name="requirements" class="form-control"
-                           placeholder="Comma-separated, e.g. Python, SQL, HTML"
-                           value="{{ m.requirements_text(j.requirements) }}">
-                    <div class="form-text">Used by <a href="{{ url_for('job_match') }}">Job Match</a> to compare against your skills.</div>
+                    <label for="preferred_skills" class="form-label">Preferred skills</label>
+                    <input type="text" id="preferred_skills" name="preferred_skills" class="form-control"
+                           placeholder="Comma-separated, e.g. Docker, AWS"
+                           value="{{ m.list_text(req.get('preferred_skills')) }}">
+                    <div class="form-text">Nice-to-haves that the posting mentions but doesn't require.</div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="education" class="form-label">Education</label>
+                    <input type="text" id="education" name="education" class="form-control" list="education_options"
+                           placeholder="e.g. Bachelor's degree" value="{{ req.get('education') or '' }}">
+                    <datalist id="education_options">
+                        {% for level in m.EDUCATION_LEVELS %}
+                            <option value="{{ level }}">
+                        {% endfor %}
+                    </datalist>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="experience_years" class="form-label">Years of experience</label>
+                    <div class="input-group">
+                        <input type="number" id="experience_years" name="experience_years" class="form-control" min="0" max="50" step="1"
+                               value="{{ req.get('experience_years') if req.get('experience_years') is not none else '' }}">
+                        <span class="input-group-text">years</span>
+                    </div>
+                </div>
+
+                <div class="col-12">
+                    <div class="form-check form-switch">
+                        <input type="checkbox" id="remote_option" name="remote_option" value="1" class="form-check-input" role="switch"
+                               {{ "checked" if req.get("remote_option") }}>
+                        <label for="remote_option" class="form-check-label">Remote job</label>
+                    </div>
                 </div>
             </div>
         </fieldset>

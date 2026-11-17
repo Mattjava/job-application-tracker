@@ -8,6 +8,10 @@
 
 - It is now time to work on the CSS. I am using Bootstrap for this project; I have already set it up in the backend (app.py). Your goal is to apply it to apply it to the HTML. I was thinking of going for a minit (green - white) color palette for the website. Be sure you pay close attention to the spacing of the tables.
 
+- Hey Claude. I am adding a new column into the application table: Interview data. InterviewData is a JSON column that contains the number of interview rounds (interview_rounds), an array of interviewer names (interviewers), an array of technical questions (technical_questions), an array of feedback regarding the interview (feedback), the next steps as a string if the application is not finished (next_steps), and a rating for a completed application process (rating).
+
+Additionally, requirements column on the jobs table is now expanded to have required skills (required_skills), preferred skills (preferred_skills), the education needed (education), experience needed (experience_years), and whether or not it is a remote job (remote_option).
+
 # What Worked
 
 - Supplied a basic HTML template to work with
@@ -15,7 +19,7 @@
 
 # What You Changed
 
-- References to backend functions and routes were changed to use url_for. This makes it easier to better understand the code
+- References to backendw functions and routes were changed to use url_for. This makes it easier to better understand the code
 - Supplied values from the backend into the UI. Claude didn't set up the inputs for rendering, so I have to put in the work
 - Changed some references to a function. For example, I changed a function's name, so I have to step into the HTML and change it there as well. 
 - Changed various aspects of the UI. For example, I re-organized the statues list on the dashboard. I felt the original design made by the AI did not meet the needs of the user, so I went ahead and re-arranged them by hand.

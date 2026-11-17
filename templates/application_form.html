@@ -10,15 +10,28 @@
         /apps/add                        when adding
         /apps/<application_id>/edit      when editing
 
-    Field names match the columns in the applications table.
+    Field names match the columns in the applications table, except the Interview section (see below).
     Note: an unchecked checkbox is not sent at all, so read cover_letter_sent as
     `1 if "cover_letter_sent" in request.form else 0`.
+
+    Interview section: there is no "interview_data" field. It sends one field per JSON key, and the
+    backend builds the interview_data JSON column from them:
+        interview_rounds     number                               -> int or null
+        interviewers         comma-separated text ("Ana, Raj")    -> list of strings
+        technical_questions  textarea, one question per line      -> list of strings
+        feedback             textarea, one point per line         -> list of strings
+        next_steps           text                                 -> string or null
+        rating               select, 1-5 or ""                    -> int or null
+    next_steps is only sent while the status is still open, and rating only once it is finished
+    (m.FINISHED_STATUSES). The other one is disabled in the browser, so it arrives missing and should be
+    saved as null. When editing, application.interview_data must already be parsed from JSON (a dict).
 #}
 {% extends "base.html" %}
 {% import "macros.html" as m %}
 
 {% set editing = application is defined and application %}
 {% set app = application if editing else {} %}
+{% set iv = app.interview_data if app.interview_data is mapping else {} %}
 
 {% block title %}{{ "Edit" if editing else "Add" }} application{% endblock %}
 
@@ -116,9 +129,85 @@
             </div>
         </fieldset>
 
+        <fieldset class="form-section">
+            <legend>Interview</legend>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label for="interview_rounds" class="form-label">Interview rounds</label>
+                    <input type="number" id="interview_rounds" name="interview_rounds" class="form-control" min="0" max="20" step="1"
+                           value="{{ iv.get('interview_rounds') if iv.get('interview_rounds') is not none else '' }}">
+                </div>
+
+                <div class="col-md-8">
+                    <label for="interviewers" class="form-label">Interviewers</label>
+                    <input type="text" id="interviewers" name="interviewers" class="form-control"
+                           placeholder="Comma-separated, e.g. Ana Lopez, Raj Patel"
+                           value="{{ m.list_text(iv.get('interviewers')) }}">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="technical_questions" class="form-label">Technical questions</label>
+                    <textarea id="technical_questions" name="technical_questions" class="form-control" rows="5"
+                              placeholder="One question per line">{{ m.list_text(iv.get('technical_questions'), "\n") }}</textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="feedback" class="form-label">Feedback</label>
+                    <textarea id="feedback" name="feedback" class="form-control" rows="5"
+                              placeholder="One point per line">{{ m.list_text(iv.get('feedback'), "\n") }}</textarea>
+                </div>
+
+                {# Only one of these two applies, depending on whether the status is finished (see the script below). #}
+                <div class="col-md-8" data-interview-stage="open">
+                    <label for="next_steps" class="form-label">Next steps</label>
+                    <input type="text" id="next_steps" name="next_steps" class="form-control"
+                           placeholder="e.g. Final round with the hiring manager" value="{{ iv.get('next_steps') or '' }}">
+                    <div class="form-text">What happens next while the application is still in progress.</div>
+                </div>
+
+                <div class="col-md-4" data-interview-stage="finished">
+                    <label for="rating" class="form-label">Rating</label>
+                    <select id="rating" name="rating" class="form-select">
+                        <option value="">Not rated</option>
+                        {% for score in range(m.RATING_MAX, 0, -1) %}
+                            <option value="{{ score }}" {{ "selected" if (iv.get("rating") | int) == score }}>
+                                {{ "★" * score }} ({{ score }} of {{ m.RATING_MAX }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">How the whole process went, once it's over.</div>
+                </div>
+            </div>
+        </fieldset>
+
         <div class="form-actions">
             <button type="submit" class="btn btn-primary px-4">{{ "Save changes" if editing else "Add application" }}</button>
             <a href="{{ url_for('app_page') }}" class="btn btn-outline-secondary">Cancel</a>
         </div>
     </form>
+
+    {# Show "Next steps" while the application is open and "Rating" once it's finished.
+       The hidden field is also disabled so it isn't submitted. Without JavaScript, both fields stay visible. #}
+    <script>
+        (function () {
+            const finishedStatuses = {{ m.FINISHED_STATUSES | tojson }};
+            const status = document.getElementById("status");
+            const sections = document.querySelectorAll("[data-interview-stage]");
+
+            function update() {
+                const stage = finishedStatuses.includes(status.value) ? "finished" : "open";
+                sections.forEach(function (section) {
+                    const show = section.dataset.interviewStage === stage;
+                    section.hidden = !show;
+                    section.querySelectorAll("input, select, textarea").forEach(function (field) {
+                        field.disabled = !show;
+                    });
+                });
+            }
+
+            status.addEventListener("change", update);
+            update();
+        })();
+    </script>
 {% endblock %}

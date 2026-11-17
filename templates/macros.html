@@ -16,7 +16,15 @@
 
 {% set STATUSES = STATUS_GROUPS["Waiting"] + STATUS_GROUPS["Applied"] + STATUS_GROUPS["Interviewing"] + STATUS_GROUPS["Offer"] + STATUS_GROUPS["Closed"] %}
 
+{# Statuses where the hiring process is over. These applications get a rating instead of next steps. #}
+{% set FINISHED_STATUSES = STATUS_GROUPS["Closed"] + ["Offer Accepted"] %}
+
 {% set JOB_TYPES = ["Full-time", "Part-time", "Contract", "Internship", "Temporary"] %}
+
+{% set EDUCATION_LEVELS = ["High school diploma", "Associate's degree", "Bachelor's degree", "Master's degree", "PhD"] %}
+
+{# Interview ratings are on a 1 to RATING_MAX scale. #}
+{% set RATING_MAX = 5 %}
 
 
 {# Prints the value, or a (faded) dash when it is empty. #}
@@ -46,9 +54,12 @@
 {%- endmacro %}
 
 
-{# Turns the JSON requirements string from the jobs table ('["Java", "SQL"]') into "Java, SQL". #}
-{% macro requirements_text(raw) -%}
-    {%- if raw -%}{{ raw | replace("[", "") | replace("]", "") | replace('"', "") }}{%- endif -%}
+{# Joins a list (e.g. ["Java", "SQL"]) into text for a form field: "Java, SQL" or one item per line.
+   A plain string is printed as-is, and None prints nothing. #}
+{% macro list_text(items, sep=", ") -%}
+    {%- if items is string -%}{{ items }}
+    {%- elif items is iterable -%}{{ items | join(sep) }}
+    {%- endif -%}
 {%- endmacro %}
 
 
@@ -88,18 +99,56 @@
 {%- endmacro %}
 
 
-{# A wrapping row of skill chips. `skills` is a list of strings; `missing=True` uses the amber style. #}
-{% macro chips(skills, missing=False) -%}
+{# A wrapping row of skill chips. `skills` is a list of strings.
+   `missing=True` uses the amber style; `preferred=True` uses the lighter dashed style for nice-to-have skills. #}
+{% macro chips(skills, missing=False, preferred=False) -%}
+    {%- set items = [skills] if skills is string else (skills or []) -%}
     <div class="chip-list">
-        {%- for skill in skills -%}<span class="chip{{ ' chip-missing' if missing }}">{{ skill }}</span>{%- endfor -%}
+        {%- for skill in items -%}
+            <span class="chip{{ ' chip-missing' if missing }}{{ ' chip-preferred' if preferred }}">{{ skill }}</span>
+        {%- endfor -%}
     </div>
 {%- endmacro %}
 
 
-{# The JSON requirements string from the jobs table as chips, or a dash when there are none. #}
-{% macro requirement_chips(raw) -%}
-    {%- set skills = requirements_text(raw).split(",") | map("trim") | select | list -%}
-    {%- if skills -%}{{ chips(skills) }}{%- else -%}<span class="muted-dash">—</span>{%- endif -%}
+{# Required + preferred skills from a job's requirements, each group labelled. Dash when both are empty. #}
+{% macro skill_groups(required, preferred) -%}
+    {%- if required or preferred -%}
+        {%- if required -%}
+            <div class="chip-group">
+                {%- if preferred -%}<span class="chip-group-label">Required</span>{%- endif -%}
+                {{ chips(required) }}
+            </div>
+        {%- endif -%}
+        {%- if preferred -%}
+            <div class="chip-group">
+                <span class="chip-group-label">Preferred</span>
+                {{ chips(preferred, preferred=True) }}
+            </div>
+        {%- endif -%}
+    {%- else -%}<span class="muted-dash">—</span>{%- endif -%}
+{%- endmacro %}
+
+
+{# Years of experience as "3+ years", or "No experience required" for 0. #}
+{% macro experience(years) -%}
+    {%- if years is none or years is undefined or years == "" -%}<span class="muted-dash">—</span>
+    {%- elif years | int == 0 -%}No experience required
+    {%- else -%}{{ years | int }}+ year{{ "" if years | int == 1 else "s" }}
+    {%- endif -%}
+{%- endmacro %}
+
+
+{# Interview rating as stars, e.g. ★★★★☆ for 4 out of 5. Dash when not rated. #}
+{% macro rating_stars(rating) -%}
+    {%- if rating -%}
+        {%- set score = rating | int -%}
+        <span class="rating-stars" role="img" aria-label="Rated {{ score }} out of {{ RATING_MAX }}">
+            {%- for i in range(1, RATING_MAX + 1) -%}
+                <span class="{{ 'star-on' if i <= score else 'star-off' }}" aria-hidden="true">★</span>
+            {%- endfor -%}
+        </span>
+    {%- else -%}<span class="muted-dash">—</span>{%- endif -%}
 {%- endmacro %}
 
 

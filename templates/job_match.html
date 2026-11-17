@@ -5,6 +5,10 @@
         skills - list of skill strings, e.g. ["Python", "HTML", "SQL"]
         report - list from evaluate_skills(skills), sorted best match first. Each item has:
                  title, total, matches, value, percent, missing
+                 (total / matches / missing count required_skills only)
+                 Optional keys, shown when present:
+                   preferred_missing - preferred_skills the user doesn't have
+                   remote_option, experience_years, education - copied from the job's requirements
 
     The "Update skills" form sends GET /job-match?skills=Python,+SQL,+HTML
     (the route currently uses a hard-coded list, so it would need to read request.args to use this).
@@ -13,6 +17,19 @@
 {% import "macros.html" as m %}
 
 {% block title %}Job Match{% endblock %}
+
+{# One line under the job title, e.g. "Remote · 3+ years · Bachelor's degree". Empty when the report has none of these. #}
+{% macro job_facts(job) -%}
+    {%- set facts = [] -%}
+    {%- if job.remote_option is defined and job.remote_option is not none -%}
+        {%- set _ = facts.append("Remote" if job.remote_option else "Not remote") -%}
+    {%- endif -%}
+    {%- if job.experience_years is defined and job.experience_years is not none -%}
+        {%- set _ = facts.append(m.experience(job.experience_years) | striptags) -%}
+    {%- endif -%}
+    {%- if job.education -%}{%- set _ = facts.append(job.education) -%}{%- endif -%}
+    {%- if facts -%}<span class="cell-secondary">{{ facts | join(" · ") }}</span>{%- endif -%}
+{%- endmacro %}
 
 {% macro match_table(jobs, ranked, bar_class) %}
     <div class="table-responsive">
@@ -30,7 +47,10 @@
                 {% for job in jobs %}
                     <tr>
                         <td class="col-id">#{{ ranked.index(job) + 1 }}</td>
-                        <td class="col-title"><span class="cell-primary">{{ job.title }}</span></td>
+                        <td class="col-title">
+                            <span class="cell-primary">{{ job.title }}</span>
+                            {{ job_facts(job) }}
+                        </td>
                         <td>{{ m.meter(job.percent, bar_class) }}</td>
                         <td class="col-num">{{ job.matches }} of {{ job.total }}</td>
                         <td class="col-skills">
@@ -38,6 +58,12 @@
                                 {{ m.chips(job.missing, missing=True) }}
                             {% else %}
                                 <span class="flag flag-yes">None, you meet every requirement</span>
+                            {% endif %}
+                            {% if job.preferred_missing %}
+                                <div class="chip-group">
+                                    <span class="chip-group-label">Nice to have</span>
+                                    {{ m.chips(job.preferred_missing, preferred=True) }}
+                                </div>
                             {% endif %}
                         </td>
                     </tr>

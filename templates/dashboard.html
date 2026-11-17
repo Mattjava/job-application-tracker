@@ -9,6 +9,8 @@
         contacts     - rows from show_all_contacts()
 
     Status groups (Waiting / Interviewing / Offer / Closed) come from macros.html.
+    The Interviews list also reads next_steps / rating from app.interview_data, which must already be
+    parsed from JSON (a dict). Without it, those lines are simply left out.
 #}
 {% extends "base.html" %}
 {% import "macros.html" as m %}
@@ -218,6 +220,12 @@
                                 <div class="flex-grow-1 min-w-0">
                                     <span class="cell-primary">{{ job_label(app.job_id) }}</span>
                                     <span class="cell-secondary">{{ app.interview_date.strftime("%a, %b %d %Y at %I:%M %p") }}</span>
+                                    {% set iv = app.interview_data if app.interview_data is mapping else {} %}
+                                    {% if app.status in m.FINISHED_STATUSES %}
+                                        {% if iv.get("rating") %}<span class="d-block mt-1">{{ m.rating_stars(iv.rating) }}</span>{% endif %}
+                                    {% elif iv.get("next_steps") %}
+                                        <span class="cell-secondary">Next: {{ iv.next_steps }}</span>
+                                    {% endif %}
                                 </div>
                                 {{ m.status_badge(app.status) }}
                             </li>

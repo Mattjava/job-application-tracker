@@ -6,6 +6,10 @@
         jobs         - rows from show_all_jobs()       (used to show the job title instead of job_id)
         companies    - rows from show_all_companies()  (used to show the company name)
 
+    app.interview_data must already be parsed from JSON (a dict, not a string) with the keys:
+        interview_rounds (int), interviewers (list), technical_questions (list),
+        feedback (list), next_steps (str), rating (int, 1-5)
+
     Links / forms on this page point to:
         GET  /apps/add                  -> application_form.html (new)
         GET  /apps/<application_id>/edit -> application_form.html (edit)
@@ -50,6 +54,7 @@
                         <th scope="col">Cover letter</th>
                         <th scope="col">Response date</th>
                         <th scope="col">Interview</th>
+                        <th scope="col">Interview details</th>
                         <th scope="col">Notes</th>
                         <th scope="col" class="col-actions"><span class="visually-hidden">Actions</span></th>
                     </tr>
@@ -57,6 +62,8 @@
                 <tbody>
                     {% for app in apps | sort(attribute="application_date", reverse=true) %}
                         {% set job = job_lookup.get(app.job_id) %}
+                        {% set iv = app.interview_data if app.interview_data is mapping else {} %}
+                        {% set finished = app.status in m.FINISHED_STATUSES %}
                         <tr>
                             <td class="col-id">#{{ app.application_id }}</td>
                             <td class="col-title">
@@ -76,6 +83,46 @@
                                     <span class="cell-secondary">{{ app.interview_date.strftime("%I:%M %p") }}</span>
                                 {% else %}<span class="muted-dash">—</span>{% endif %}
                             </td>
+                            <td class="col-medium">
+                                {% if iv.values() | select | list %}
+                                    {% set rounds = iv.get("interview_rounds") %}
+                                    <details class="cell-details">
+                                        <summary>{{ rounds ~ " round" ~ ("" if rounds == 1 else "s") if rounds else "View" }}</summary>
+                                        <div class="cell-details-body is-structured">
+                                            <dl class="detail-list">
+                                                {% if iv.get("interviewers") %}
+                                                    <dt>Interviewers</dt>
+                                                    <dd>{{ m.list_text(iv.interviewers) }}</dd>
+                                                {% endif %}
+                                                {% for key, label in [("technical_questions", "Technical questions"), ("feedback", "Feedback")] %}
+                                                    {% set items = iv.get(key) %}
+                                                    {% if items %}
+                                                        <dt>{{ label }}</dt>
+                                                        <dd>
+                                                            {% if items is string %}{{ items }}
+                                                            {% else %}<ul>{% for item in items %}<li>{{ item }}</li>{% endfor %}</ul>{% endif %}
+                                                        </dd>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                {% if iv.get("next_steps") and not finished %}
+                                                    <dt>Next steps</dt>
+                                                    <dd>{{ iv.next_steps }}</dd>
+                                                {% endif %}
+                                                {% if iv.get("rating") %}
+                                                    <dt>Rating</dt>
+                                                    <dd>{{ m.rating_stars(iv.rating) }}</dd>
+                                                {% endif %}
+                                            </dl>
+                                        </div>
+                                    </details>
+                                    {# The most useful field at a glance: the rating once it's over, otherwise what's next. #}
+                                    {% if finished and iv.get("rating") %}
+                                        <span class="d-block mt-1">{{ m.rating_stars(iv.rating) }}</span>
+                                    {% elif not finished and iv.get("next_steps") %}
+                                        <span class="cell-secondary mt-1" title="{{ iv.next_steps }}">Next: {{ iv.next_steps | truncate(40) }}</span>
+                                    {% endif %}
+                                {% else %}<span class="muted-dash">—</span>{% endif %}
+                            </td>
                             <td>{{ m.details_cell(app.notes) }}</td>
                             <td class="col-actions">
                                 {{ m.row_actions(url_for('edit_application_page', app_id=app.application_id),
@@ -85,7 +132,7 @@
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="10" class="table-empty">
+                            <td colspan="11" class="table-empty">
                                 No applications yet. <a href="{{ url_for('add_app') }}">Add your first one.</a>
                             </td>
                         </tr>

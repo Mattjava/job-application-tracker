@@ -8,15 +8,50 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 
 bootstrap = Bootstrap5(app)
 
+# JSON
+
+def parse_json(rows, field):
+    """Turns a JSON column (which MySQL returns as a string) into a dict/list, for one row or a list of rows."""
+    for row in rows if isinstance(rows, list) else [rows]:
+        if row and isinstance(row.get(field), (str, bytes)):
+            row[field] = json.loads(row[field])
+    return rows
+
+def read_requirements(req):
+    """A job's requirements as a dict. Older rows stored only a list of required skills."""
+    if isinstance(req, list):
+        return {"required_skills": req}
+    return req or {}
+
+def split_list(text, sep=","):
+    return [s.strip() for s in (text or "").split(sep) if s.strip()]
+
+def build_requirements(form):
+    return json.dumps({
+        "required_skills": split_list(form.get("required_skills")),
+        "preferred_skills": split_list(form.get("preferred_skills")),
+        "education": form.get("education") or None,
+        "experience_years": int(form["experience_years"]) if form.get("experience_years") else None,
+        "remote_option": "remote_option" in form,
+    })
+
+def build_interview_data(form):
+    return json.dumps({
+        "interview_rounds": int(form["interview_rounds"]) if form.get("interview_rounds") else None,
+        "interviewers": split_list(form.get("interviewers")),
+        "technical_questions": split_list(form.get("technical_questions"), "\n"),
+        "feedback": split_list(form.get("feedback"), "\n"),
+        "next_steps": form.get("next_steps") or None,
+        "rating": int(form["rating"]) if form.get("rating") else None,
+    })
+
+
 def normalize(raw_form):
     for key in raw_form.keys():
         value = raw_form[key]
         
         if value == '':
             raw_form[key] = None
-        elif key == "requirements":
-            value = value.split(', ')
-            raw_form[key] = json.dumps(value)
             
     return raw_form
             
@@ -24,29 +59,34 @@ def normalize(raw_form):
 def evaluate_skills(skills):
     skills = [skill.lower() for skill in skills]
     
-    jobs = show_all_jobs()
-    
+    jobs = parse_json(show_all_jobs(), 'requirements')
+
     report = []
-    
+
     for job in jobs:
         if 'requirements' not in job or job['requirements'] is None:
             continue
-        req = json.loads(job['requirements'])
-        
+        requirements = read_requirements(job['requirements'])
+
+        # The match score only counts required skills; preferred skills are reported separately.
+        skills_needed = requirements.get('required_skills') or []
+        preferred_missing = [skill for skill in requirements.get('preferred_skills') or []
+                             if skill.lower() not in skills]
+
         company = get_one_company(job['company_id'])
         
         title = f"{job['job_title']} at {company['company_name']}"
         
-        if len(req) == 0:
+        if len(skills_needed) == 0:
             continue
         
-        total = len(req)  
+        total = len(skills_needed)  
         
 
         matches = 0
         missing_arr = []
         
-        for skill in req:
+        for skill in skills_needed:
             if skill.lower() in skills:
                 matches += 1
             else:
@@ -60,7 +100,11 @@ def evaluate_skills(skills):
             "matches": matches,
             "value": value,
             "percent": math.ceil(value * 100),
-            "missing": missing_arr
+            "missing": missing_arr,
+            "preferred_missing": preferred_missing,
+            "remote_option": requirements.get('remote_option'),
+            "experience_years": requirements.get('experience_years'),
+            "education": requirements.get('education')
         })
         
     report.sort(key=lambda x: x['value'], reverse=True)
@@ -77,14 +121,14 @@ def evaluate_skills(skills):
 @app.route("/")
 def home_page():
     return render_template("dashboard.html",
-                           applications=show_all_applications(),
+                           applications=parse_json(show_all_applications(), 'interview_data'),
                            companies=show_all_companies(),
-                           jobs=show_all_jobs(),
+                           jobs=parse_json(show_all_jobs(), 'requirements'),
                            contacts=show_all_contacts())
-            
+
 @app.route("/apps")
 def app_page():
-    all_apps = show_all_applications()
+    all_apps = parse_json(show_all_applications(), 'interview_data')
     
     return render_template("applications.html", applications=all_apps, jobs=show_all_jobs(), companies=show_all_companies())
 
@@ -96,7 +140,7 @@ def company_page():
 
 @app.route("/jobs")
 def job_page():
-    jobs = show_all_jobs()
+    jobs = parse_json(show_all_jobs(), 'requirements')
     
     return render_template("jobs.html", jobs=jobs, companies=show_all_companies())
 
@@ -119,7 +163,7 @@ def add_job():
         return render_template('job_form.html', companies=show_all_companies())
     
     body = normalize(dict(request.form))
-    
+
     raw = (body['company_id'] if 'company_id' in body else None, 
                body['job_title'] if 'job_title' in body else None, 
                body['job_description'] if 'job_description' in body else None, 
@@ -128,8 +172,8 @@ def add_job():
                body['job_type'] if 'job_type' in body else None, 
                body['posting_url'] if 'posting_url' in body else None, 
                body['date_posted'] if 'date_posted' in body else None, 
-               body['is_active'] if 'is_active' in body else 0, 
-               body['requirements'] if 'requirements' in body else None,
+               body['is_active'] if 'is_active' in body else 0,
+               build_requirements(body),
                body['created_at'] if 'created_at' in body else datetime.now())
     
     create_job(raw)
@@ -193,6 +237,7 @@ def add_app():
                 body['cover_letter_sent'] if 'cover_letter_sent' in body else 0,
                 body['response_date'] if 'response_date' in body else None,
                 body['interview_date'] if 'interview_date' in body else None,
+                build_interview_data(body),
                 body['notes'] if 'notes' in body else None,
                 body['created_at'] if 'created_at' in body else datetime.now().isoformat())
     
@@ -236,7 +281,7 @@ def delete_contact_route(contact_id):
 @app.route("/jobs/<int:job_id>/edit", methods=["GET", "POST"])
 def edit_job_page(job_id):
     if request.method == "GET":
-        job_details = get_one_job(job_id)
+        job_details = parse_json(get_one_job(job_id), 'requirements')
         return render_template("job_form.html", job=job_details, companies=show_all_companies())
     
     body = normalize(dict(request.form))
@@ -251,8 +296,8 @@ def edit_job_page(job_id):
            body['job_type'] if 'job_type' in body else None, 
            body['posting_url'] if 'posting_url' in body else None, 
            body['date_posted'] if 'date_posted' in body else None, 
-           body['is_active'] if 'is_active' in body else 0, 
-           body['requirements'] if 'requirements' in body else None,
+           body['is_active'] if 'is_active' in body else 0,
+           build_requirements(body),
            job_id)
     
     update_job(raw)
@@ -285,7 +330,7 @@ def edit_contact_page(contact_id):
 @app.route("/apps/<int:app_id>/edit", methods=["GET", "POST"])
 def edit_application_page(app_id):
     if request.method == "GET":
-        app_details = get_one_application(app_id)
+        app_details = parse_json(get_one_application(app_id), 'interview_data')
         return render_template("application_form.html", application=app_details, jobs=show_all_jobs(), companies=show_all_companies())
     
     body = normalize(dict(request.form))
@@ -297,6 +342,7 @@ def edit_application_page(app_id):
             body['cover_letter_sent'] if 'cover_letter_sent' in body else 0,
             body['response_date'] if 'response_date' in body else None,
             body['interview_date'] if 'interview_date' in body else None,
+            build_interview_data(body),
             body['notes'] if 'notes' in body else None,
             app_id)
     

@@ -61,6 +61,7 @@ CREATE TABLE `applications` (
   `cover_letter_sent` tinyint(1) DEFAULT '0',
   `response_date` date DEFAULT NULL,
   `interview_date` datetime DEFAULT NULL,
+  `interview_data` json DEFAULT NULL,
   `notes` text,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`application_id`),
@@ -76,7 +77,7 @@ CREATE TABLE `applications` (
 
 LOCK TABLES `applications` WRITE;
 /*!40000 ALTER TABLE `applications` DISABLE KEYS */;
-INSERT INTO `applications` VALUES (1,1,'2025-01-16','Offer Accepted','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29'),(2,3,'2025-01-13','Interview Completed','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29'),(3,4,'2025-01-09','Interview Completed','v2.0',0,NULL,NULL,NULL,'2026-09-19 18:06:29'),(4,5,'2025-01-15','Applied','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29'),(5,7,'2025-01-12','Phone Screen','v2.1',1,NULL,NULL,NULL,'2026-09-19 18:06:29'),(35,6,'2026-10-04','Applied','v3.0',1,NULL,NULL,NULL,'2026-10-04 18:49:31'),(36,36,'2026-11-03','Pending',NULL,0,NULL,NULL,NULL,'2026-11-03 16:41:22');
+INSERT INTO `applications` VALUES (1,1,'2025-01-16','Offer Accepted','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(2,3,'2025-01-13','Interview Completed','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(3,4,'2025-01-09','Interview Completed','v2.0',0,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(4,5,'2025-01-15','Applied','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(5,7,'2025-01-12','Phone Screen','v2.1',1,NULL,NULL,NULL,NULL,'2026-09-19 18:06:29'),(35,6,'2026-10-04','Applied','v3.0',1,NULL,NULL,NULL,NULL,'2026-10-04 18:49:31'),(36,36,'2026-11-03','Pending',NULL,0,NULL,NULL,NULL,NULL,'2026-11-03 16:41:22');
 /*!40000 ALTER TABLE `applications` ENABLE KEYS */;
 UNLOCK TABLES;
 
