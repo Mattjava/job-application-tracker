@@ -16,6 +16,8 @@ Additionally, requirements column on the jobs table is now expanded to have requ
 
 - Supplied a basic HTML template to work with
 - Created a smooth UI with CSS and Bootstrap
+- Help expand the input of tables in response to a new column being added to the tables
+- Supplied backend bug fixes that helped me create a better server
 
 # What You Changed
 
