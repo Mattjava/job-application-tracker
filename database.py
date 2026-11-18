@@ -108,6 +108,8 @@ def delete_entry(table_name: str, id: int):
         "applications": "application_id"
     }
     
+    print(id)
+    
     try:
         cursor = engine.cursor(dictionary=True)
         query = f"DELETE FROM {table_name} where {keys[table_name]} = %s"

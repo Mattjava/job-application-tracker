@@ -250,7 +250,7 @@ def delete_job_route(job_id):
     try:
         delete_job(job_id)
     except Exception as e:
-        print("FAILED")
+        print(f"FAILED: {e}")
     return redirect(url_for("job_page"))
         
 @app.route("/apps/<int:app_id>/delete", methods=["POST"])
@@ -267,7 +267,7 @@ def delete_company_route(company_id):
     try:
         delete_company(company_id)
     except Exception as e:
-        print("FAILED")
+        print(f"FAILED: {e}")
     return redirect(url_for("company_page"))
         
 @app.route("/contacts/<int:contact_id>/delete", methods=["POST"])
