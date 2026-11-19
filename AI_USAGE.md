@@ -17,11 +17,11 @@ Additionally, requirements column on the jobs table is now expanded to have requ
 - Supplied a basic HTML template to work with
 - Created a smooth UI with CSS and Bootstrap
 - Help expand the input of tables in response to a new column being added to the tables
-- Supplied backend bug fixes that helped me create a better server
+- Supplied and suggested backend bug fixes that helped me create a better server
 
 # What You Changed
 
-- References to backendw functions and routes were changed to use url_for. This makes it easier to better understand the code
+- References to backend functions and routes were changed to use url_for. This makes it easier to better understand the code
 - Supplied values from the backend into the UI. Claude didn't set up the inputs for rendering, so I have to put in the work
 - Changed some references to a function. For example, I changed a function's name, so I have to step into the HTML and change it there as well. 
 - Changed various aspects of the UI. For example, I re-organized the statues list on the dashboard. I felt the original design made by the AI did not meet the needs of the user, so I went ahead and re-arranged them by hand.
