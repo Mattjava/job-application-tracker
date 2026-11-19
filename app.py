@@ -72,7 +72,7 @@ def evaluate_skills(skills):
         skills_needed = requirements.get('required_skills') or []
         preferred_missing = [skill for skill in requirements.get('preferred_skills') or []
                              if skill.lower() not in skills]
-
+        
         company = get_one_company(job['company_id'])
         
         title = f"{job['job_title']} at {company['company_name']}"

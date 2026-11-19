@@ -25,3 +25,6 @@ search process.
 7. Run "pip install -r requirements.txt" to install the dependences
 8. Run "python app.py" to run the app 
 9. Open a browser and follow the link "http://127.0.0.1:5000/"
+
+
+Demo: https://youtu.be/3hLBr1yzrSw
